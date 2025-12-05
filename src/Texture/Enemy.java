@@ -42,10 +42,14 @@ public class Enemy {
             if (animIndex >= type.eatTextures.length) {
                 isEating = false;
                 animIndex = 0;
-                texID = textures[type.textureIndex];
+                texID = textures[type.textureIndex]; // تأكد إن ده معرف
             }
         } else {
             texID = textures[type.textureIndex];
+        }
+        if (texID == 0) {
+            // fallback: لو مفيش texture صالح اختار واحد افتراضي (مثلاً index 3 موجود)
+            texID = textures.length > 3 ? textures[3] : 0;
         }
 
         gl.glBindTexture(GL.GL_TEXTURE_2D, texID);

@@ -1,6 +1,7 @@
 package Texture;
 
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
 import javax.media.opengl.*;
 import javax.media.opengl.glu.GLU;
@@ -65,18 +66,26 @@ public class QuizGLEventListener extends AnimListener {
 
         for (int i = 0; i < textureNames.length; i++) {
             try {
-                texture[i] = TextureReader.readTexture(assetsFolderName + "//Fish_game//" + textureNames[i], true);
+                texture[i] = TextureReader.readTexture(assetsFolderName + File.separator + "Fish_game" + File.separator + textureNames[i], true);
+                if (texture[i] == null) {
+                    System.out.println("TextureReader returned null for " + textureNames[i]);
+                    textures[i] = 0;
+                    continue;
+                }
 
                 gl.glBindTexture(GL.GL_TEXTURE_2D, textures[i]);
-                new GLU().gluBuild2DMipmaps(
+                GLU glu = new GLU();
+                glu.gluBuild2DMipmaps(
                         GL.GL_TEXTURE_2D, GL.GL_RGBA,
                         texture[i].getWidth(), texture[i].getHeight(),
                         GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, texture[i].getPixels()
                 );
             } catch (IOException e) {
                 System.out.println("Error loading texture " + textureNames[i] + ": " + e.getMessage());
+                textures[i] = 0; // safe default
             }
         }
+
 
         fishes.add(new Fish(150, 0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN));
         fishes.add(new Fish(-150, 0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S));

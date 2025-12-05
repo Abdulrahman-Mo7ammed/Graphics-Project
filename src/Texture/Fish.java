@@ -51,6 +51,9 @@ public class Fish {
         else if (r)     { move( 5, 0, maxW, maxH); dir=1; reflection= 1; animationIndex++;}
         else if (u)     { move( 0, 5, maxW, maxH); dir=0; animationIndex++;}
         else if (d)     { move( 0,-5, maxW, maxH); dir=2; animationIndex++;}
+
+        if (animationIndex >= Integer.MAX_VALUE - 10)
+            animationIndex = 0;
     }
 
     private void move(int dx, int dy, int maxW, int maxH){
@@ -69,37 +72,30 @@ public class Fish {
         for (int i = 0; i < enemies.size(); i++) {
             Enemy enemy = enemies.get(i);
 
-            double xDiff = this.x - enemy.x;
-            double yDiff = this.y - enemy.y;
-            double distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+            double combinedRadius = (this.scale + enemy.type.scale) * 20; // 20 قيمة تجريبية
+            double dx = this.x - enemy.x;
+            double dy = this.y - enemy.y;
+            double distSq = dx*dx + dy*dy;
 
-            // المسافة دي (40) بتعتمد على دقة الصور، ممكن تزودها أو تنقصها
-            if (distance < 40) {
+            if (distSq < combinedRadius * combinedRadius) {
 
-                // حالة 1: أنا أكبر من العدو (أنا المفترس)
+                // أنا أكبر من العدو
                 if (this.scale > enemy.type.scale) {
 
                     enemies.remove(i);
                     i--;
 
-                    this.startEating(); // أنا أفتح بقي
-
-                    // أكبر شوية
+                    this.startEating();
                     this.scale += 0.05;
-                    if (this.scale > 2.5) this.scale = 2.5; // أقصى حجم
+                    if (this.scale > 2.5) this.scale = 2.5;
 
-                }
-                // حالة 2: العدو أكبر مني أو قدي (أنا الفريسة)
-                else {
-                    // العدو يفتح بقه (لو عنده صور أكل)
-                    // الـ Small fish معندوش صور فهيكمل عادي كأنه صدمك
+                } else {
                     enemy.eat();
-
-                    // أنا أموت
                     this.isAlive = false;
                     System.out.println("GAME OVER! Eaten by " + enemy.type);
                 }
             }
+
         }
     }
 
