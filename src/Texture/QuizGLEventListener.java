@@ -1,5 +1,7 @@
 package Texture;
 
+import com.sun.opengl.util.GLUT;
+
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +13,7 @@ import java.util.List;
 
 public class QuizGLEventListener extends AnimListener {
 
-    int maxWidth = 300, maxHeight = 200;
+    int maxWidth = 300, maxHeight = 200 , score = 0;
 
     List<Fish> fishes = new ArrayList<>();
     List<Enemy> monsters = new ArrayList<>();
@@ -19,33 +21,16 @@ public class QuizGLEventListener extends AnimListener {
     int spawnDelay = 20;
     int spawnCounter = 20;
 
+    GLUT glut = new GLUT(); // <<< تعريف GLUT مرة واحدة
+
     String[] textureNames = {
-            "Fish1.png",       // 0
-            "Fish2.png",       // 1
-            "eat.png",         // 2
-            "small_fish.png",  // 3
-            "Green_Fish.png",  // 4
-            "Green_eat1.png",  // 5
-            "Green_eat2.png",  // 6
-            "Green_eat3.png",  // 7
-            "Lemon_fish.png",  // 8
-            "Lemon_eat1.png",  // 9
-            "Lemon_eat2.png",  // 10
-            "Lemon_eat3.png",  // 11
-            "Lemon_eat4.png",  // 12
-            "Yellow_fish.png", // 13
-            "Yellow_eat1.png", // 14
-            "Yellow_eat2.png", // 15
-            "Yellow_eat3.png", // 16
-            "Whale.png",       // 17
-            "Whale_eat1.png",  // 18
-            "Whale_eat2.png",  // 19
-            "Whale_eat3.png",  // 20
-            "Shark.png",       // 21
-            "Shark_eat1.png",  // 22
-            "Shark_eat2.png",  // 23
-            "Shark_eat3.png",  // 24
-            "sea.png"          // 25
+            "Fish1.png", "Fish2.png", "eat.png", "small_fish.png",
+            "Green_Fish.png", "Green_eat1.png", "Green_eat2.png", "Green_eat3.png",
+            "Lemon_fish.png", "Lemon_eat1.png", "Lemon_eat2.png", "Lemon_eat3.png", "Lemon_eat4.png",
+            "Yellow_fish.png", "Yellow_eat1.png", "Yellow_eat2.png", "Yellow_eat3.png",
+            "Whale.png", "Whale_eat1.png", "Whale_eat2.png", "Whale_eat3.png",
+            "Shark.png", "Shark_eat1.png", "Shark_eat2.png", "Shark_eat3.png",
+            "sea.png"
     };
 
     TextureReader.Texture[] texture = new TextureReader.Texture[textureNames.length];
@@ -82,13 +67,18 @@ public class QuizGLEventListener extends AnimListener {
                 );
             } catch (IOException e) {
                 System.out.println("Error loading texture " + textureNames[i] + ": " + e.getMessage());
-                textures[i] = 0; // safe default
+                textures[i] = 0;
             }
         }
 
-
+        // إضافة Fish
         fishes.add(new Fish(150, 0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN));
         fishes.add(new Fish(-150, 0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S));
+
+        // إضافة score callback لكل Fish
+        for (Fish f : fishes) {
+            f.setScoreCallback(() -> score++);
+        }
     }
 
     // ===========================================================
@@ -101,20 +91,20 @@ public class QuizGLEventListener extends AnimListener {
 
         drawBackground(gl);
 
+        // spawn monsters
         spawnCounter--;
-
         if (spawnCounter <= 0) {
             boolean startFromRight = Math.random() > 0.5;
             double startX = startFromRight ? maxWidth : -maxWidth;
             double startY = (Math.random() * (maxHeight * 2)) - maxHeight;
 
             FishType randomType = FishType.getRandomType();
-
             monsters.add(new Enemy(startX, startY, randomType));
 
             spawnCounter = spawnDelay;
         }
 
+        // تحديث ورسم كل Enemy
         for (int i = 0; i < monsters.size(); i++) {
             Enemy e = monsters.get(i);
             e.update();
@@ -126,13 +116,43 @@ public class QuizGLEventListener extends AnimListener {
             }
         }
 
+        // تحديث ورسم كل Fish
         for (Fish f : fishes) {
             f.updateMovement(keyBits, maxWidth, maxHeight);
-            f.checkCollision(monsters);
+            f.checkCollision(monsters); // هنا ممكن يحصل زيادة في score
             f.draw(gl, textures);
-
-
         }
+
+        // =======================================================
+        // عرض Score
+        // =======================================================
+        GLU glu = new GLU();
+        // حفظ Projection القديم
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+        glu.gluOrtho2D(-maxWidth, maxWidth, -maxHeight, maxHeight);
+
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+
+        // رسم النص
+        gl.glDisable(GL.GL_TEXTURE_2D);
+        gl.glColor4f(1f, 1f, 1f, 1f);
+
+        gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
+        String text = "Score: " + score;
+        for (char c : text.toCharArray()) {
+            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
+        }
+        gl.glEnable(GL.GL_TEXTURE_2D);
+
+        // استعادة Projection القديم
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL.GL_MODELVIEW);
     }
 
     // ===========================================================
