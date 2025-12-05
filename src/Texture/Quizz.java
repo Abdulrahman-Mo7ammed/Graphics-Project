@@ -22,7 +22,7 @@ public class Quizz extends JFrame {
         animator.start();
         setTitle("Fish game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(700, 700);
+        setSize(1000, 1000);
         setLocationRelativeTo(null);
         setVisible(true);
         setFocusable(true);
