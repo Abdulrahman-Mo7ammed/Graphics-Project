@@ -1,7 +1,7 @@
 <component name="libraryTable">
-  <library name="gluegen-rt">
+  <library name="jogl">
     <CLASSES>
-      <root url="jar://D:/Downloads/JOGLwin/JOGLwin/lib64/gluegen-rt.jar!/" />
+      <root url="jar://D:/Downloads/JOGLwin/JOGLwin/lib64/jogl.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

@@ -49,12 +49,12 @@ public class Fish {
         boolean u = keys.get(UP);
         boolean d = keys.get(DOWN);
 
-        if (l && u) { move(-5, 5, maxW, maxH); dir=5; reflection=-1; animationIndex++; }
-        else if (r && u) { move( 5, 5, maxW, maxH); dir=4; reflection= 1; animationIndex++; }
-        else if (l && d) { move(-5,-5, maxW, maxH); dir=7; reflection=-1; animationIndex++; }
-        else if (r && d) { move( 5,-5, maxW, maxH); dir=6; reflection= 1; animationIndex++; }
-        else if (l)     { move(-5, 0, maxW, maxH); dir=3; reflection=-1; animationIndex++; }
-        else if (r)     { move( 5, 0, maxW, maxH); dir=1; reflection= 1; animationIndex++; }
+        if (l && u) { move(-5, 5, maxW, maxH); dir=5; reflection=1; animationIndex++; }
+        else if (r && u) { move( 5, 5, maxW, maxH); dir=4; reflection= -1; animationIndex++; }
+        else if (l && d) { move(-5,-5, maxW, maxH); dir=7; reflection=1; animationIndex++; }
+        else if (r && d) { move( 5,-5, maxW, maxH); dir=6; reflection= -1; animationIndex++; }
+        else if (l)     { move(-5, 0, maxW, maxH); dir=3; reflection=1; animationIndex++; }
+        else if (r)     { move( 5, 0, maxW, maxH); dir=1; reflection= -1; animationIndex++; }
         else if (u)     { move( 0, 5, maxW, maxH); dir=0; animationIndex++; }
         else if (d)     { move( 0,-5, maxW, maxH); dir=2; animationIndex++; }
 
@@ -126,8 +126,8 @@ public class Fish {
         gl.glBindTexture(GL.GL_TEXTURE_2D, textureToBind);
 
         double X = x / 300.0, Y = y / 200.0;
-        double angle = (dir == 4 || dir == 5) ? 30 : 0;
-        if (dir == 6 || dir == 7) angle = -30;
+        double angle = (dir == 4 || dir == 5) ? -30 : 0;
+        if (dir == 6 || dir == 7) angle = 30;
 
         gl.glPushMatrix();
         gl.glTranslated(X, Y, 0);

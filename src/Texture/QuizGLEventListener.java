@@ -24,7 +24,7 @@ public class QuizGLEventListener extends AnimListener {
     GLUT glut = new GLUT(); // <<< تعريف GLUT مرة واحدة
 
     String[] textureNames = {
-            "Fish1.png", "Fish2.png", "eat.png", "small_fish.png",
+            "fish1-sw11.png", "fish1-sw22.png", "fish1-eat1.png", "small_fish.png",
             "Green_Fish.png", "Green_eat1.png", "Green_eat2.png", "Green_eat3.png",
             "Lemon_fish.png", "Lemon_eat1.png", "Lemon_eat2.png", "Lemon_eat3.png", "Lemon_eat4.png",
             "Yellow_fish.png", "Yellow_eat1.png", "Yellow_eat2.png", "Yellow_eat3.png",
