@@ -1,5 +1,4 @@
 package Texture;
-
 import javax.media.opengl.GL;
 import java.util.BitSet;
 import java.util.List;
@@ -28,6 +27,7 @@ public class Fish {
 
     int LEFT, RIGHT, UP, DOWN;
 
+    public int score = 0;
     Runnable scoreCallback;
 
     public void setScoreCallback(Runnable r) {

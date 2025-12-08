@@ -7,8 +7,11 @@
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="gluegen-rt" level="project" />
     <orderEntry type="library" name="jogl" level="project" />
+    <orderEntry type="library" name="gluegen-rt" level="project" />
     <orderEntry type="library" name="lib64" level="project" />
+    <orderEntry type="library" name="lib65" level="project" />
+    <orderEntry type="library" name="lib66" level="project" />
+    <orderEntry type="library" name="lib67" level="project" />
   </component>
 </module>

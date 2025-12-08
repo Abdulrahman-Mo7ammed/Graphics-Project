@@ -80,10 +80,11 @@ public class QuizGLEventListener extends AnimListener {
         setDifficulty(Difficulty.EASY);
 
         for (Fish f : fishes)
-            f.setScoreCallback(() -> score += 10);
+            f.setScoreCallback(() -> f.score += 10);
 
         for (Fish f : fishes)
-            f.setScoreCallback(() -> score += 10);
+            f.setScoreCallback(() -> f.score += 10);
+
 
     }
 
@@ -204,8 +205,6 @@ public class QuizGLEventListener extends AnimListener {
     }
 
     public void drawScore(GL gl) {
-
-
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPushMatrix();
         gl.glLoadIdentity();
@@ -218,9 +217,16 @@ public class QuizGLEventListener extends AnimListener {
         gl.glDisable(GL.GL_TEXTURE_2D);
         gl.glColor3f(1,1,1);
 
+        // Player 1 Score LEFT
         gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
-        String text = "Score: " + score;
-        for (char c : text.toCharArray())
+        String text1 = "P1 Score: " + fishes.get(0).score;
+        for (char c : text1.toCharArray())
+            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
+
+        // Player 2 Score RIGHT
+        gl.glRasterPos2f(maxWidth - 150, maxHeight - 20);
+        String text2 = "P2 Score: " + fishes.get(1).score;
+        for (char c : text2.toCharArray())
             glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
 
         gl.glEnable(GL.GL_TEXTURE_2D);
@@ -230,6 +236,7 @@ public class QuizGLEventListener extends AnimListener {
         gl.glPopMatrix();
         gl.glMatrixMode(GL.GL_MODELVIEW);
     }
+
 
     public void drawBackground(GL gl){
         gl.glEnable(GL.GL_BLEND);
