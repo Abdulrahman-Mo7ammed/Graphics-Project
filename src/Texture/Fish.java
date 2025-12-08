@@ -75,8 +75,8 @@ public class Fish {
         else if (r && d) { move( 5,-5, maxW, maxH); dir=6; reflection=-1; animationIndex++; }
         else if (l)     { move(-5, 0, maxW, maxH); dir=3; reflection=1; animationIndex++; }
         else if (r)     { move( 5, 0, maxW, maxH); dir=1; reflection=-1; animationIndex++; }
-        else if (u)     { move( 0, 5, maxW, maxH); dir=0; }
-        else if (d)     { move( 0,-5, maxW, maxH); dir=2; }
+        else if (u)     { move( 0, 5, maxW, maxH); dir=0; animationIndex++;}
+        else if (d)     { move( 0,-5, maxW, maxH); dir=2; animationIndex++;}
 
         if (animationIndex >= Integer.MAX_VALUE - 10)
             animationIndex = 0;
