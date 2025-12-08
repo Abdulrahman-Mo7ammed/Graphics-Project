@@ -28,7 +28,7 @@ public class QuizGLEventListener extends AnimListener {
     int spawnDelay = 20;
     int spawnCounter = 20;
 
-    int scoreToWin = 100; // مثال، اللاعب يحتاج 100 نقطة للفوز
+    int scoreToWin = 100;
     boolean gameOver = false;
 
 
@@ -174,7 +174,6 @@ public class QuizGLEventListener extends AnimListener {
 
         gl.glEnable(GL.GL_BLEND);
 
-        // 2. ربط صورة القلب (هي قبل الأخيرة في المصفوفة)
         int heartIndex = textures.length - 2;
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[heartIndex]);
 
@@ -191,27 +190,20 @@ public class QuizGLEventListener extends AnimListener {
                 double heartSize = 15; // حجم القلب
                 double spacing = 35;   // المسافة بين كل قلب والتاني
 
-                // تحديد مكان الرسم بناءً على رقم اللاعب
                 if (i == 1) {
-                    // === Player 1 (فوق على الشمال) ===
-                    // بنبدأ من الشمال (-maxWidth) وبنمشي يمين
                     x = -maxWidth + 30 + (j * spacing);
                     y = maxHeight - 50; // تحت السقف شوية عشان السكور
                 } else {
-                    // === Player 2 (فوق على اليمين) ===
-                    // بنبدأ من اليمين (maxWidth) وبنمشي شمال
                     x = maxWidth - 30 - (j * spacing);
                     y = maxHeight - 50;
                 }
 
                 gl.glTranslated(x, y, 0);
 
-                // التعديل هنا: عملنا متغير للعرض ومتغير للطول
-                double heartWidth = 20;  // العرض (خليه أكبر)
-                double heartHeight = 15; // الطول (خليه أصغر)
+                double heartWidth = 20;
+                double heartHeight = 15;
 
                 gl.glBegin(GL.GL_QUADS);
-                // لاحظ استخدام heartWidth مع الـ X و heartHeight مع الـ Y
                 gl.glTexCoord2f(0, 0); gl.glVertex2d(-heartWidth, -heartHeight);
                 gl.glTexCoord2f(1, 0); gl.glVertex2d(heartWidth, -heartHeight);
                 gl.glTexCoord2f(1, 1); gl.glVertex2d(heartWidth, heartHeight);
@@ -224,7 +216,6 @@ public class QuizGLEventListener extends AnimListener {
 
         gl.glDisable(GL.GL_BLEND);
 
-        // 4. إرجاع المصفوفات لوضعها الطبيعي
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPopMatrix();
         gl.glMatrixMode(GL.GL_MODELVIEW);
@@ -250,13 +241,12 @@ public class QuizGLEventListener extends AnimListener {
         for (char c : text1.toCharArray())
             glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
 
-        // Player 2 Score RIGHT
+
         gl.glRasterPos2f(maxWidth - 150, maxHeight - 20);
         String text2 = "P2 Score: " + fishes.get(1).score;
         for (char c : text2.toCharArray())
             glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
 
-        // High Score CENTER
         gl.glRasterPos2f(-50, maxHeight - 50);
         String highText = "High Score: " + highScore;
         for (char c : highText.toCharArray())
@@ -347,11 +337,10 @@ public class QuizGLEventListener extends AnimListener {
         try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(highScoreFile))) {
             highScore = Integer.parseInt(br.readLine());
         } catch (Exception e) {
-            highScore = 0; // لو الملف مش موجود أو فيه مشكلة
+            highScore = 0;
         }
     }
 
-    // حفظ الرقم القياسي الجديد
     public void saveHighScore() {
         try (java.io.FileWriter fw = new java.io.FileWriter(highScoreFile)) {
             fw.write(Integer.toString(highScore));

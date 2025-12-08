@@ -10,12 +10,8 @@ public class Fish {
     public double scale = 0.45;
     public int Heart = 3;
 
-    // ========== Damage & Flash System ==========
     public boolean invincible = false;
     public int invincibleTimer = 0;
-
-    // شيلنا loseHeart لأننا مش محتاجينها كحالة منفصلة، الـ invincible كفاية
-    // public boolean loseHeart = false;
 
     int dir = 1;
     int reflection = 1;
@@ -51,7 +47,6 @@ public class Fish {
     public void updateInvincible() {
         if (invincible) {
             invincibleTimer--;
-            // لما الوقت يخلص، الحصانة تتفك
             if (invincibleTimer <= 0) {
                 invincible = false;
             }
@@ -61,8 +56,6 @@ public class Fish {
     public void updateMovement(BitSet keys, int maxW, int maxH) {
         if (!isAlive) return;
 
-        // --- (التعديل 1) ---
-        // مسحنا الشرط اللي كان بيوقف الحركة هنا عشان تقدر تتحرك وهي بتنور
 
         boolean l = keys.get(LEFT);
         boolean r = keys.get(RIGHT);
@@ -92,8 +85,6 @@ public class Fish {
     public void checkCollision(List<Enemy> enemies) {
         if (!isAlive) return;
 
-        // --- (التعديل 2) ---
-        // مسحنا if (invincible) return; من هنا عشان نسمح بالكود يكمل ونشوف لو هنأكل حد
 
         for (int i = 0; i < enemies.size(); i++) {
 

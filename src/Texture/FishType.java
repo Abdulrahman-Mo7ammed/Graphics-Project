@@ -2,22 +2,16 @@ package Texture;
 
 public enum FishType {
 
-    // الترتيب: Index, EatArray, Scale, Speed, Weight, >> BaseRadius <<
 
-    // السمكة الصغيرة صورتها صغيرة أصلاً، فنديها رقم صغير (مثلاً 15 بكسل)
     SMALL_FISH(3, new int[]{}, 0.4f, 3.0f, 100),
 
-    // الليمون والجرين صورهم متوسطة (حوالي 30 بكسل)
     LEMON_FISH(8, new int[]{9, 10, 11, 12}, 0.6f, 5.0f, 60),
     GREEN_FISH(4, new int[]{5, 6, 7}, 0.8f, 5.0f, 50),
 
-    // الأصفر صورته أكبر شوية
     YELLOW_FISH(13, new int[]{14, 15, 16}, 1.0f, 6.0f, 40),
 
-    // القرش صورته عريضة وكبيرة
     SHARK(21, new int[]{22, 23, 24}, 1.5f, 8.0f, 10),
 
-    // الحوت صورته عملاقة
     WHALE(17, new int[]{18, 19, 20}, 2.0f, 2.0f, 5);
 
 
@@ -27,7 +21,6 @@ public enum FishType {
     public final float speed;
     public final int weight;
 
-    // عدل الـ Constructor عشان يستقبل المتغير الجديد
     FishType(int textureIndex, int[] eatTextures, float scale, float speed, int weight) {
         this.textureIndex = textureIndex;
         this.eatTextures = eatTextures;
@@ -36,7 +29,6 @@ public enum FishType {
         this.weight = weight;
     }
 
-    // ... دالة Random زي ما هي ...
     public static FishType getRandomType() {
         int totalWeight = 0;
         for (FishType type : values()) totalWeight += type.weight;
