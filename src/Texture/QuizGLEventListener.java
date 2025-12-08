@@ -1,7 +1,6 @@
 package Texture;
 
 import com.sun.opengl.util.GLUT;
-
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
@@ -13,15 +12,16 @@ import java.util.List;
 
 public class QuizGLEventListener extends AnimListener {
 
-    int maxWidth = 300, maxHeight = 200 , score = 0;
-
+    int maxWidth = 300, maxHeight = 200;
+    int score = 0;
+    GLU glu = new GLU();
     List<Fish> fishes = new ArrayList<>();
     List<Enemy> monsters = new ArrayList<>();
 
     int spawnDelay = 20;
     int spawnCounter = 20;
 
-    GLUT glut = new GLUT(); // <<< تعريف GLUT مرة واحدة
+    GLUT glut = new GLUT();
 
     String[] textureNames = {
             "fish1-sw11.png", "fish1-sw22.png", "fish1-eat1.png", "small_fish.png",
@@ -29,7 +29,7 @@ public class QuizGLEventListener extends AnimListener {
             "Lemon_fish.png", "Lemon_eat1.png", "Lemon_eat2.png", "Lemon_eat3.png", "Lemon_eat4.png",
             "Yellow_fish.png", "Yellow_eat1.png", "Yellow_eat2.png", "Yellow_eat3.png",
             "Whale.png", "Whale_eat1.png", "Whale_eat2.png", "Whale_eat3.png",
-            "Shark.png", "Shark_eat1.png", "Shark_eat2.png", "Shark_eat3.png",
+            "Shark.png", "Shark_eat1.png", "Shark_eat2.png", "Shark_eat3.png","heart1.png",
             "sea.png"
     };
 
@@ -38,9 +38,6 @@ public class QuizGLEventListener extends AnimListener {
 
     BitSet keyBits = new BitSet(256);
 
-    // ===========================================================
-    // INIT
-    // ===========================================================
     public void init(GLAutoDrawable gld) {
         GL gl = gld.getGL();
         gl.glClearColor(1,1,1,1);
@@ -51,12 +48,10 @@ public class QuizGLEventListener extends AnimListener {
 
         for (int i = 0; i < textureNames.length; i++) {
             try {
-                texture[i] = TextureReader.readTexture(assetsFolderName + File.separator + "Fish_game" + File.separator + textureNames[i], true);
-                if (texture[i] == null) {
-                    System.out.println("TextureReader returned null for " + textureNames[i]);
-                    textures[i] = 0;
-                    continue;
-                }
+                texture[i] = TextureReader.readTexture(
+                        assetsFolderName + File.separator +
+                                "Fish_game" + File.separator +
+                                textureNames[i], true);
 
                 gl.glBindTexture(GL.GL_TEXTURE_2D, textures[i]);
                 GLU glu = new GLU();
@@ -66,24 +61,17 @@ public class QuizGLEventListener extends AnimListener {
                         GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, texture[i].getPixels()
                 );
             } catch (IOException e) {
-                System.out.println("Error loading texture " + textureNames[i] + ": " + e.getMessage());
-                textures[i] = 0;
+                System.out.println("Error loading texture " + textureNames[i]);
             }
         }
 
-        // إضافة Fish
         fishes.add(new Fish(150, 0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN));
         fishes.add(new Fish(-150, 0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S));
 
-        // إضافة score callback لكل Fish
-        for (Fish f : fishes) {
-            f.setScoreCallback(() -> score++);
-        }
+        for (Fish f : fishes)
+            f.setScoreCallback(() -> score += 10);
     }
 
-    // ===========================================================
-    // DISPLAY
-    // ===========================================================
     public void display(GLAutoDrawable gld) {
         GL gl = gld.getGL();
         gl.glClear(GL.GL_COLOR_BUFFER_BIT);
@@ -91,7 +79,6 @@ public class QuizGLEventListener extends AnimListener {
 
         drawBackground(gl);
 
-        // spawn monsters
         spawnCounter--;
         if (spawnCounter <= 0) {
             boolean startFromRight = Math.random() > 0.5;
@@ -104,7 +91,6 @@ public class QuizGLEventListener extends AnimListener {
             spawnCounter = spawnDelay;
         }
 
-        // تحديث ورسم كل Enemy
         for (int i = 0; i < monsters.size(); i++) {
             Enemy e = monsters.get(i);
             e.update();
@@ -116,18 +102,20 @@ public class QuizGLEventListener extends AnimListener {
             }
         }
 
-        // تحديث ورسم كل Fish
         for (Fish f : fishes) {
             f.updateMovement(keyBits, maxWidth, maxHeight);
-            f.checkCollision(monsters); // هنا ممكن يحصل زيادة في score
-            f.draw(gl, textures);
+            f.updateInvincible();
+            f.checkCollision(monsters);
+                f.draw(gl, textures);
         }
 
-        // =======================================================
-        // عرض Score
-        // =======================================================
+        drawScore(gl);
+        drawLives(gl);
+    }
+    public void drawLives(GL gl) {
         GLU glu = new GLU();
-        // حفظ Projection القديم
+
+        // 1. تجهيز الشاشة للرسم ثنائي الأبعاد (UI)
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPushMatrix();
         gl.glLoadIdentity();
@@ -137,27 +125,93 @@ public class QuizGLEventListener extends AnimListener {
         gl.glPushMatrix();
         gl.glLoadIdentity();
 
-        // رسم النص
+        gl.glEnable(GL.GL_BLEND);
+
+        // 2. ربط صورة القلب (هي قبل الأخيرة في المصفوفة)
+        int heartIndex = textures.length - 2;
+        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[heartIndex]);
+
+        // 3. اللف على اللاعبين
+        for (int i = 0; i < fishes.size(); i++) {
+            Fish f = fishes.get(i);
+
+            // لو اللاعب ميت وعدد قلوبه صفر، مش هنرسم حاجة
+            // بس اللوب دي هترسم عدد القلوب المتبقية
+            for (int j = 0; j < f.Heart; j++) {
+                gl.glPushMatrix();
+
+                double x, y;
+                double heartSize = 15; // حجم القلب
+                double spacing = 35;   // المسافة بين كل قلب والتاني
+
+                // تحديد مكان الرسم بناءً على رقم اللاعب
+                if (i == 1) {
+                    // === Player 1 (فوق على الشمال) ===
+                    // بنبدأ من الشمال (-maxWidth) وبنمشي يمين
+                    x = -maxWidth + 30 + (j * spacing);
+                    y = maxHeight - 50; // تحت السقف شوية عشان السكور
+                } else {
+                    // === Player 2 (فوق على اليمين) ===
+                    // بنبدأ من اليمين (maxWidth) وبنمشي شمال
+                    x = maxWidth - 30 - (j * spacing);
+                    y = maxHeight - 50;
+                }
+
+                gl.glTranslated(x, y, 0);
+
+                // التعديل هنا: عملنا متغير للعرض ومتغير للطول
+                double heartWidth = 20;  // العرض (خليه أكبر)
+                double heartHeight = 15; // الطول (خليه أصغر)
+
+                gl.glBegin(GL.GL_QUADS);
+                // لاحظ استخدام heartWidth مع الـ X و heartHeight مع الـ Y
+                gl.glTexCoord2f(0, 0); gl.glVertex2d(-heartWidth, -heartHeight);
+                gl.glTexCoord2f(1, 0); gl.glVertex2d(heartWidth, -heartHeight);
+                gl.glTexCoord2f(1, 1); gl.glVertex2d(heartWidth, heartHeight);
+                gl.glTexCoord2f(0, 1); gl.glVertex2d(-heartWidth, heartHeight);
+                gl.glEnd();
+
+                gl.glPopMatrix();
+            }
+        }
+
+        gl.glDisable(GL.GL_BLEND);
+
+        // 4. إرجاع المصفوفات لوضعها الطبيعي
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glPopMatrix();
+    }
+
+    public void drawScore(GL gl) {
+
+
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+        glu.gluOrtho2D(-maxWidth, maxWidth, -maxHeight, maxHeight);
+
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+
         gl.glDisable(GL.GL_TEXTURE_2D);
-        gl.glColor4f(1f, 1f, 1f, 1f);
+        gl.glColor3f(1,1,1);
 
         gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
         String text = "Score: " + score;
-        for (char c : text.toCharArray()) {
+        for (char c : text.toCharArray())
             glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
-        }
+
         gl.glEnable(GL.GL_TEXTURE_2D);
 
-        // استعادة Projection القديم
         gl.glPopMatrix();
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPopMatrix();
         gl.glMatrixMode(GL.GL_MODELVIEW);
     }
 
-    // ===========================================================
-    // BACKGROUND
-    // ===========================================================
     public void drawBackground(GL gl){
         gl.glEnable(GL.GL_BLEND);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[textures.length - 1]);
@@ -173,9 +227,6 @@ public class QuizGLEventListener extends AnimListener {
         gl.glDisable(GL.GL_BLEND);
     }
 
-    // ===========================================================
-    // KEYBOARD
-    // ===========================================================
     public void keyPressed(KeyEvent e) { keyBits.set(e.getKeyCode()); }
     public void keyReleased(KeyEvent e) { keyBits.clear(e.getKeyCode()); }
     public void keyTyped(KeyEvent e) {}

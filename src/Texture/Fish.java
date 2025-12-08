@@ -3,29 +3,36 @@ package Texture;
 import javax.media.opengl.GL;
 import java.util.BitSet;
 import java.util.List;
+import javax.media.opengl.glu.GLU;
 
 public class Fish {
 
-    double x, y;
+    public double x, y;
+    public double scale = 0.45;
+    public int Heart = 3;
 
-    double scale = 0.45; // حجم أولي
+    // ========== Damage & Flash System ==========
+    public boolean invincible = false;
+    public int invincibleTimer = 0;
+
+    // شيلنا loseHeart لأننا مش محتاجينها كحالة منفصلة، الـ invincible كفاية
+    // public boolean loseHeart = false;
+
     int dir = 1;
     int reflection = 1;
     int animationIndex = 0;
 
-    boolean isAlive = true;
-    boolean isEating = false;
+    public boolean isAlive = true;
+    public boolean isEating = false;
     int eatCounter = 0;
 
     int LEFT, RIGHT, UP, DOWN;
 
-    // ========== NEW: Score Callback ==========
     Runnable scoreCallback;
 
     public void setScoreCallback(Runnable r) {
         this.scoreCallback = r;
     }
-    // ==========================================
 
     public Fish(double x, double y, int LEFT, int RIGHT, int UP, int DOWN) {
         this.x = x;
@@ -41,8 +48,21 @@ public class Fish {
         eatCounter = 0;
     }
 
+    public void updateInvincible() {
+        if (invincible) {
+            invincibleTimer--;
+            // لما الوقت يخلص، الحصانة تتفك
+            if (invincibleTimer <= 0) {
+                invincible = false;
+            }
+        }
+    }
+
     public void updateMovement(BitSet keys, int maxW, int maxH) {
         if (!isAlive) return;
+
+        // --- (التعديل 1) ---
+        // مسحنا الشرط اللي كان بيوقف الحركة هنا عشان تقدر تتحرك وهي بتنور
 
         boolean l = keys.get(LEFT);
         boolean r = keys.get(RIGHT);
@@ -50,13 +70,13 @@ public class Fish {
         boolean d = keys.get(DOWN);
 
         if (l && u) { move(-5, 5, maxW, maxH); dir=5; reflection=1; animationIndex++; }
-        else if (r && u) { move( 5, 5, maxW, maxH); dir=4; reflection= -1; animationIndex++; }
+        else if (r && u) { move( 5, 5, maxW, maxH); dir=4; reflection=-1; animationIndex++; }
         else if (l && d) { move(-5,-5, maxW, maxH); dir=7; reflection=1; animationIndex++; }
-        else if (r && d) { move( 5,-5, maxW, maxH); dir=6; reflection= -1; animationIndex++; }
+        else if (r && d) { move( 5,-5, maxW, maxH); dir=6; reflection=-1; animationIndex++; }
         else if (l)     { move(-5, 0, maxW, maxH); dir=3; reflection=1; animationIndex++; }
-        else if (r)     { move( 5, 0, maxW, maxH); dir=1; reflection= -1; animationIndex++; }
-        else if (u)     { move( 0, 5, maxW, maxH); dir=0; animationIndex++; }
-        else if (d)     { move( 0,-5, maxW, maxH); dir=2; animationIndex++; }
+        else if (r)     { move( 5, 0, maxW, maxH); dir=1; reflection=-1; animationIndex++; }
+        else if (u)     { move( 0, 5, maxW, maxH); dir=0; }
+        else if (d)     { move( 0,-5, maxW, maxH); dir=2; }
 
         if (animationIndex >= Integer.MAX_VALUE - 10)
             animationIndex = 0;
@@ -69,13 +89,14 @@ public class Fish {
         y = Math.max(-maxH+15, Math.min(maxH-20, y));
     }
 
-    // ======================================================
-    // منطق الإصطدام بعد الدمج — يشمل زيادة السكور
-    // ======================================================
     public void checkCollision(List<Enemy> enemies) {
         if (!isAlive) return;
 
+        // --- (التعديل 2) ---
+        // مسحنا if (invincible) return; من هنا عشان نسمح بالكود يكمل ونشوف لو هنأكل حد
+
         for (int i = 0; i < enemies.size(); i++) {
+
             Enemy enemy = enemies.get(i);
 
             double combinedRadius = (this.scale + enemy.type.scale) * 20;
@@ -85,25 +106,43 @@ public class Fish {
 
             if (distSq < combinedRadius * combinedRadius) {
 
-                // لو أنا أكبر → آكل العدو
                 if (this.scale > enemy.type.scale) {
-
                     enemies.remove(i);
                     i--;
 
                     this.startEating();
-                    this.scale += 0.05;
-                    if (this.scale > 2.5) this.scale = 2.5;
 
-                    // ========== NEW: Increase Score ==========
+                    switch (enemy.type){
+                        case SMALL_FISH: scale+=0.04; break;
+                        case GREEN_FISH: scale+=0.05; break;
+                        case LEMON_FISH: scale+=0.06; break;
+                        case YELLOW_FISH: scale+=0.07; break;
+                        case SHARK: scale+=0.08; break;
+                        case WHALE: scale+=0.09; break;
+                    }
+
+                    if (scale > 3) scale = 3;
+
                     if (scoreCallback != null) scoreCallback.run();
-                    // ==========================================
+                }
+                else {
 
-                } else {
-                    // لو العدو أكبر → Game Over
-                    enemy.eat();
-                    this.isAlive = false;
-                    System.out.println("GAME OVER! Eaten by " + enemy.type);
+
+                    if (!invincible) {
+                        enemy.eat();
+                        Heart--;
+
+                        if (Heart <= 0) {
+                            isAlive = false;
+                        } else {
+
+                            invincible = true;
+                            invincibleTimer = 50;
+                            x = 0;
+                            y = 0;
+                             scale = 0.45;
+                        }
+                    }
                 }
             }
         }
@@ -112,15 +151,20 @@ public class Fish {
     public void draw(GL gl, int[] textures) {
         if (!isAlive) return;
 
+        if (invincible) {
+            if ((invincibleTimer / 5) % 2 == 0) return;
+        }
+
         gl.glEnable(GL.GL_BLEND);
+
         int textureToBind;
 
         if (isEating) {
-            textureToBind = textures[2]; // صورة الأكل
+            textureToBind = textures[2];
             eatCounter++;
-            if (eatCounter > 10) isEating = false;
+            if (eatCounter > 5) isEating = false;
         } else {
-            textureToBind = textures[animationIndex % 2]; // Fish1 / Fish2
+            textureToBind = textures[animationIndex % 2];
         }
 
         gl.glBindTexture(GL.GL_TEXTURE_2D, textureToBind);
