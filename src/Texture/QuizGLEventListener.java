@@ -264,7 +264,7 @@ public class QuizGLEventListener extends AnimListener {
                 break;
             case MEDIUM:
                 this.spawnDelay = 20;
-                this.enemySpeedMultiplier = 1.8;
+                this.enemySpeedMultiplier = 1.85;
                 this.initialLives = 3;
                 break;
             case HARD:
