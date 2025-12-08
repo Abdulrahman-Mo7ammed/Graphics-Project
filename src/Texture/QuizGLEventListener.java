@@ -128,6 +128,8 @@ public class QuizGLEventListener extends AnimListener {
 
         drawScore(gl);
         drawLives(gl);
+
+        drawDifficultyBanner(gl);
     }
     public void drawLives(GL gl) {
         GLU glu = new GLU();
@@ -251,7 +253,7 @@ public class QuizGLEventListener extends AnimListener {
             case EASY:
                 this.spawnDelay = 30;
                 this.enemySpeedMultiplier = 0.8;
-                this.initialLives = 5;
+                this.initialLives = 3;
                 break;
             case MEDIUM:
                 this.spawnDelay = 20;
@@ -261,12 +263,44 @@ public class QuizGLEventListener extends AnimListener {
             case HARD:
                 this.spawnDelay = 10;
                 this.enemySpeedMultiplier = 1.5;
-                this.initialLives = 2;
+                this.initialLives = 3;
                 break;
         }
         for (Fish f : fishes) {
             f.Heart = this.initialLives;
         }
+    }
+    public void drawDifficultyBanner(GL gl) {
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+        glu.gluOrtho2D(-maxWidth, maxWidth, -maxHeight, maxHeight);
+
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+
+        gl.glDisable(GL.GL_TEXTURE_2D);
+        gl.glColor3f(1.0f, 1.0f, 1.0f);
+
+        String difficultyText = "Difficulty: " + currentDifficulty.toString();
+
+        float xPos = -50;
+
+        float yPos = maxHeight - 20;
+
+        gl.glRasterPos2f(xPos, yPos);
+
+        for (char c : difficultyText.toCharArray()) {
+            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
+        }
+
+        gl.glEnable(GL.GL_TEXTURE_2D);
+
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL.GL_MODELVIEW);
     }
 
     public void keyPressed(KeyEvent e) {
