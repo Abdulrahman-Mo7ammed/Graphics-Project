@@ -77,7 +77,7 @@ public class QuizGLEventListener extends AnimListener {
         fishes.add(new Fish(150, 0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN));
         fishes.add(new Fish(-150, 0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S));
 
-        setDifficulty(Difficulty.MEDIUM);
+        setDifficulty(Difficulty.EASY);
 
         for (Fish f : fishes)
             f.setScoreCallback(() -> score += 10);
@@ -252,17 +252,17 @@ public class QuizGLEventListener extends AnimListener {
         switch (difficulty) {
             case EASY:
                 this.spawnDelay = 30;
-                this.enemySpeedMultiplier = 0.8;
+                this.enemySpeedMultiplier = 1;
                 this.initialLives = 3;
                 break;
             case MEDIUM:
                 this.spawnDelay = 20;
-                this.enemySpeedMultiplier = 1.0;
+                this.enemySpeedMultiplier = 1.8;
                 this.initialLives = 3;
                 break;
             case HARD:
                 this.spawnDelay = 10;
-                this.enemySpeedMultiplier = 1.5;
+                this.enemySpeedMultiplier = 2.5;
                 this.initialLives = 3;
                 break;
         }
