@@ -14,6 +14,10 @@ public class QuizGLEventListener extends AnimListener {
 
     int maxWidth = 300, maxHeight = 200;
     int score = 0;
+    int highScore = 0; // أعلى سكور تم الوصول له
+    String highScoreFile = "highscore.txt"; // اسم ملف حفظ الرقم القياسي
+
+
     GLU glu = new GLU();
     List<Fish> fishes = new ArrayList<>();
     List<Enemy> monsters = new ArrayList<>();
@@ -23,6 +27,10 @@ public class QuizGLEventListener extends AnimListener {
 
     int spawnDelay = 20;
     int spawnCounter = 20;
+
+    int scoreToWin = 100; // مثال، اللاعب يحتاج 100 نقطة للفوز
+    boolean gameOver = false;
+
 
     GLUT glut = new GLUT();
 
@@ -76,6 +84,8 @@ public class QuizGLEventListener extends AnimListener {
 
         fishes.add(new Fish(150, 0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN));
         fishes.add(new Fish(-150, 0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S));
+        loadHighScore();
+
 
         setDifficulty(Difficulty.EASY);
 
@@ -131,6 +141,23 @@ public class QuizGLEventListener extends AnimListener {
         drawLives(gl);
 
         drawDifficultyBanner(gl);
+
+        for (Fish f : fishes) {
+            if (f.score > highScore) {
+                highScore = f.score;
+                saveHighScore();
+            }
+        }
+        if (!gameOver) {
+            for (int i = 0; i < fishes.size(); i++) {
+                Fish f = fishes.get(i);
+                if (f.score >= scoreToWin) {
+                    gameOver = true;
+                    System.out.println("Player " + (i+1) + " Wins!");
+                }
+            }
+        }
+
     }
     public void drawLives(GL gl) {
         GLU glu = new GLU();
@@ -229,6 +256,13 @@ public class QuizGLEventListener extends AnimListener {
         for (char c : text2.toCharArray())
             glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
 
+        // High Score CENTER
+        gl.glRasterPos2f(-50, maxHeight - 50);
+        String highText = "High Score: " + highScore;
+        for (char c : highText.toCharArray())
+            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
+
+
         gl.glEnable(GL.GL_TEXTURE_2D);
 
         gl.glPopMatrix();
@@ -308,6 +342,22 @@ public class QuizGLEventListener extends AnimListener {
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPopMatrix();
         gl.glMatrixMode(GL.GL_MODELVIEW);
+    }
+    public void loadHighScore() {
+        try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(highScoreFile))) {
+            highScore = Integer.parseInt(br.readLine());
+        } catch (Exception e) {
+            highScore = 0; // لو الملف مش موجود أو فيه مشكلة
+        }
+    }
+
+    // حفظ الرقم القياسي الجديد
+    public void saveHighScore() {
+        try (java.io.FileWriter fw = new java.io.FileWriter(highScoreFile)) {
+            fw.write(Integer.toString(highScore));
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void keyPressed(KeyEvent e) {
