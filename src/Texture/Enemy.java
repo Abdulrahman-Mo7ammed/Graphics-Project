@@ -17,8 +17,8 @@ public class Enemy {
         this.direction = (startX > 0) ? -1 : 1;
     }
 
-    public void update() {
-        x += (type.speed * direction);
+    public void update(double speedMultiplier) {
+        x += (type.speed * direction * speedMultiplier);
     }
 
     public void eat() {

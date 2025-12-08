@@ -18,6 +18,9 @@ public class QuizGLEventListener extends AnimListener {
     List<Fish> fishes = new ArrayList<>();
     List<Enemy> monsters = new ArrayList<>();
 
+    double enemySpeedMultiplier = 1.0;
+    int initialLives = 3;
+
     int spawnDelay = 20;
     int spawnCounter = 20;
 
@@ -37,6 +40,12 @@ public class QuizGLEventListener extends AnimListener {
     int[] textures = new int[textureNames.length];
 
     BitSet keyBits = new BitSet(256);
+
+    public enum Difficulty {
+        EASY, MEDIUM, HARD
+    }
+
+    private Difficulty currentDifficulty = Difficulty.EASY;
 
     public void init(GLAutoDrawable gld) {
         GL gl = gld.getGL();
@@ -68,8 +77,14 @@ public class QuizGLEventListener extends AnimListener {
         fishes.add(new Fish(150, 0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN));
         fishes.add(new Fish(-150, 0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S));
 
+        setDifficulty(Difficulty.MEDIUM);
+
         for (Fish f : fishes)
             f.setScoreCallback(() -> score += 10);
+
+        for (Fish f : fishes)
+            f.setScoreCallback(() -> score += 10);
+
     }
 
     public void display(GLAutoDrawable gld) {
@@ -93,7 +108,9 @@ public class QuizGLEventListener extends AnimListener {
 
         for (int i = 0; i < monsters.size(); i++) {
             Enemy e = monsters.get(i);
-            e.update();
+
+            e.update(this.enemySpeedMultiplier);
+
             e.draw(gl, textures);
 
             if (e.isOutOfBounds(maxWidth)) {
@@ -227,7 +244,44 @@ public class QuizGLEventListener extends AnimListener {
         gl.glDisable(GL.GL_BLEND);
     }
 
-    public void keyPressed(KeyEvent e) { keyBits.set(e.getKeyCode()); }
+    public void setDifficulty(Difficulty difficulty) {
+        this.currentDifficulty = difficulty;
+
+        switch (difficulty) {
+            case EASY:
+                this.spawnDelay = 30;
+                this.enemySpeedMultiplier = 0.8;
+                this.initialLives = 5;
+                break;
+            case MEDIUM:
+                this.spawnDelay = 20;
+                this.enemySpeedMultiplier = 1.0;
+                this.initialLives = 3;
+                break;
+            case HARD:
+                this.spawnDelay = 10;
+                this.enemySpeedMultiplier = 1.5;
+                this.initialLives = 2;
+                break;
+        }
+        for (Fish f : fishes) {
+            f.Heart = this.initialLives;
+        }
+    }
+
+    public void keyPressed(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+
+        keyBits.set(keyCode);
+
+        if (keyCode == KeyEvent.VK_E) {
+            setDifficulty(Difficulty.EASY);
+        } else if (keyCode == KeyEvent.VK_M) {
+            setDifficulty(Difficulty.MEDIUM);
+        } else if (keyCode == KeyEvent.VK_H) {
+            setDifficulty(Difficulty.HARD);
+        }
+    }
     public void keyReleased(KeyEvent e) { keyBits.clear(e.getKeyCode()); }
     public void keyTyped(KeyEvent e) {}
 
