@@ -13,7 +13,7 @@ import java.util.List;
 public class QuizGLEventListener extends AnimListener {
 
     // خلي بالك لازم تعمل الpath ده مكان ما هتنزل انت السوندات
-    private static final String SOUNDS_PATH = "C:\\Users\\asus\\Graphics-Project-main\\Assets\\sounds\\";
+    private static final String SOUNDS_PATH = "Assets\\sounds\\";
     private AudioManager audioManager;
 
     int maxWidth = 300, maxHeight = 200;
