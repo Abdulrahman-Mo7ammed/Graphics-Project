@@ -6,6 +6,27 @@ import javax.media.opengl.glu.GLU;
 
 public class Fish {
 
+    public interface SoundCallback {
+
+        /// /////// Sound Callback ///////////////
+        void playEatSound();
+        void playGrowthSound();
+        void playCollisionSound();
+        void playGameOverSound();
+    }
+
+    private SoundCallback soundCallback;
+
+    public SoundCallback getSoundCallback() {
+        return soundCallback;
+    }
+
+    public void setSoundCallback(SoundCallback callback) {
+        this.soundCallback = callback;
+    }
+    ////////////////////////////////////////
+
+
     public double x, y;
     public double scale = 0.45;
     public int Heart = 3;
@@ -97,6 +118,11 @@ public class Fish {
 
             if (distSq < combinedRadius * combinedRadius) {
 
+                // collision_sound handling
+                if (soundCallback != null) {
+                    soundCallback.playCollisionSound();
+                }
+
                 if (this.scale > enemy.type.scale) {
                     enemies.remove(i);
                     i--;
@@ -115,6 +141,12 @@ public class Fish {
                     if (scale > 3) scale = 3;
 
                     if (scoreCallback != null) scoreCallback.run();
+
+                    // eat and growth sounds handling
+                    if (soundCallback != null) {
+                        soundCallback.playEatSound();
+                        soundCallback.playGrowthSound();
+                    }
                 }
                 else {
 
@@ -125,13 +157,18 @@ public class Fish {
 
                         if (Heart <= 0) {
                             isAlive = false;
+
+                            // game_over sound handling
+                            if (soundCallback != null) {
+                                soundCallback.playGameOverSound();
+                            }
                         } else {
 
                             invincible = true;
                             invincibleTimer = 50;
                             x = 0;
                             y = 0;
-                             scale = 0.45;
+                            scale = 0.45;
                         }
                     }
                 }

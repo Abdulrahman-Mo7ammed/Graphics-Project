@@ -12,6 +12,10 @@ import java.util.List;
 
 public class QuizGLEventListener extends AnimListener {
 
+    // خلي بالك لازم تعمل الpath ده مكان ما هتنزل انت السوندات
+    private static final String SOUNDS_PATH = "C:\\Users\\asus\\Graphics-Project-main\\Assets\\sounds\\";
+    private AudioManager audioManager;
+
     int maxWidth = 300, maxHeight = 200;
     int score = 0;
     int highScore = 0; // أعلى سكور تم الوصول له
@@ -53,6 +57,30 @@ public class QuizGLEventListener extends AnimListener {
         EASY, MEDIUM, HARD
     }
 
+    //دالة استدعاء الاصوات
+    private Fish.SoundCallback fishSoundCallback = new Fish.SoundCallback() {
+        @Override
+        public void playEatSound() {
+            audioManager.playSound("eat");
+            audioManager.playSound("bubble");
+        }
+
+        @Override
+        public void playGrowthSound() {
+            audioManager.playSound("growth");
+        }
+
+        @Override
+        public void playCollisionSound() {
+            audioManager.playSound("collision");
+        }
+
+        @Override
+        public void playGameOverSound() {
+            audioManager.playSound("gameover");
+            audioManager.stopBackgroundMusic();
+        }};
+
     private Difficulty currentDifficulty = Difficulty.EASY;
 
     public void init(GLAutoDrawable gld) {
@@ -62,6 +90,73 @@ public class QuizGLEventListener extends AnimListener {
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
         gl.glGenTextures(textureNames.length, textures, 0);
+
+        //////// ////// بدا اعداد الصوتيات //////////////////
+
+        // تأكد من وجود المجلد
+        File soundsFolder = new File(SOUNDS_PATH);
+        if (!soundsFolder.exists()) {
+            System.err.println("ERROR: Sounds folder not found!");
+            System.err.println("Path: " + SOUNDS_PATH);
+            // حاول مسار بديل
+            String altPath = "C:\\Users\\asus\\Graphics-Project\\Assets\\sounds\\";
+            if (new File(altPath).exists()) {
+                System.out.println("Using alternative path: " + altPath);
+                // تقدر تعدل SOUNDS_PATH هنا لو عاوز
+            }
+        } else {
+            System.out.println("Sounds folder found!");
+        }
+
+        // إنشاء AudioManager
+        audioManager = new AudioManager();
+
+        // تحميل كل الأصوات مباشرة
+        String[] sounds = {
+                "background .wav",    // موسيقى خلفية
+                "Bubbles.wav",    // فقاعات
+                "collision.wav",     // تصادم
+                "fish eats.wav",      // أكل سمكة
+                "fish growth.wav",   // نمو سمكة
+                "game-over.wav",     // نهاية لعبة
+                "zapsplat_cartoon.wav" // صوت كهربائي
+        };
+
+        String[] soundNames = {
+                "background", "bubble", "collision",
+                "eat", "growth", "gameover", "zap"
+        };
+
+        // بهندل الكيس اللي انا فيها عشان ابقى عارفها اكنه debugger
+        for (int i = 0; i < sounds.length; i++) {
+            String fullPath = SOUNDS_PATH + sounds[i];
+            System.out.print("Loading " + soundNames[i] + "... ");
+
+            if (new File(fullPath).exists()) {
+                boolean loaded = audioManager.loadSound(soundNames[i], fullPath);
+                System.out.println(loaded ? "✓" : "✗");
+            } else {
+                System.out.println("✗ (File not found)");
+            }
+        }
+
+        // تشغيل الموسيقى الخلفية
+        try {
+            audioManager.playBackgroundMusic("background");
+            System.out.println("Background music started ✓");
+        } catch (Exception e) {
+            System.out.println("Could not play background music: " + e.getMessage());
+        }
+
+        Fish fish1 = new Fish(150, 0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN);
+        fish1.setScoreCallback(() -> score += 10);
+        fish1.setSoundCallback(fishSoundCallback);  // Set the sound callback
+        fishes.add(fish1);
+
+        Fish fish2 = new Fish(-150, 0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S);
+        fish2.setScoreCallback(() -> score += 10);
+        fish2.setSoundCallback(fishSoundCallback);  // Set the same sound callback
+        fishes.add(fish2);
 
         for (int i = 0; i < textureNames.length; i++) {
             try {
@@ -82,8 +177,6 @@ public class QuizGLEventListener extends AnimListener {
             }
         }
 
-        fishes.add(new Fish(150, 0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN));
-        fishes.add(new Fish(-150, 0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S));
         loadHighScore();
 
 
@@ -134,7 +227,7 @@ public class QuizGLEventListener extends AnimListener {
             f.updateMovement(keyBits, maxWidth, maxHeight);
             f.updateInvincible();
             f.checkCollision(monsters);
-                f.draw(gl, textures);
+            f.draw(gl, textures);
         }
 
         drawScore(gl);
