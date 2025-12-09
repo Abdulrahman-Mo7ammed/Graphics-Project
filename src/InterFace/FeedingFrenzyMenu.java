@@ -77,17 +77,17 @@ public class FeedingFrenzyMenu extends JFrame {
     private void loadImages() {
         try {
             // تحميل الخلفيات
-            menuBackground = ImageIO.read(new File("src/Menu background.png"));
-            sharedBackground = ImageIO.read(new File("src/sharedBackground.png"));
+            menuBackground = ImageIO.read(new File("src/InterFace/Menu background.png"));
+            sharedBackground = ImageIO.read(new File("src/InterFace/sharedBackground.png"));
 
             try {
                 // الأبعاد الأصلية: 150, 150
-                newGameNormal = resizeImageIcon(new ImageIcon("src/New Game 1.png"), 150, 150);
-                newGameHover = resizeImageIcon(new ImageIcon("src/New Game 2.png"), 150, 150);
-                gameOptionsNormal = resizeImageIcon(new ImageIcon("src/Game Options 1.png"), 150, 150);
-                gameOptionsHover = resizeImageIcon(new ImageIcon("src/Game Options 2.png"), 150, 150);
-                exitNormal = resizeImageIcon(new ImageIcon("src/Exit 1.png"), 150, 150);
-                exitHover = resizeImageIcon(new ImageIcon("src/Exit 2.png"), 150, 150);
+                newGameNormal = resizeImageIcon(new ImageIcon("src/InterFace/New Game 1.png"), 150, 150);
+                newGameHover = resizeImageIcon(new ImageIcon("src/InterFace/New Game 2.png"), 150, 150);
+                gameOptionsNormal = resizeImageIcon(new ImageIcon("src/InterFace/Game Options 1.png"), 150, 150);
+                gameOptionsHover = resizeImageIcon(new ImageIcon("src/InterFace/Game Options 2.png"), 150, 150);
+                exitNormal = resizeImageIcon(new ImageIcon("src/InterFace/Exit 1.png"), 150, 150);
+                exitHover = resizeImageIcon(new ImageIcon("src/InterFace/Exit 2.png"), 150, 150);
             } catch (Exception e) {
                 System.out.println("Warning: Button images not found. Using default text icons.");
                 createDefaultImages(); // يُنشئ الأيقونات النصية الافتراضية
@@ -97,32 +97,32 @@ public class FeedingFrenzyMenu extends JFrame {
             // أيقونات اختيار اللاعبين - تم تغييرها لاستخدام الصور الجديدة
             try {
                 // تحميل صور 1 Player
-                player1Normal = resizeImageIcon(new ImageIcon("src/1 Player 1.png"), 120, 120);
-                player1Hover = resizeImageIcon(new ImageIcon("src/1 Player 2.png"), 120, 120);
+                player1Normal = resizeImageIcon(new ImageIcon("src/InterFace/1 Player 1.png"), 150, 150);
+                player1Hover = resizeImageIcon(new ImageIcon("src/InterFace/1 Player 2.png"), 150, 150);
 
                 // تحميل صور 2 Players
-                player2Normal = resizeImageIcon(new ImageIcon("src/Multi Player 1.png"), 120, 120);
-                player2Hover = resizeImageIcon(new ImageIcon("src/Multi Player 2.png"), 120, 120);
+                player2Normal = resizeImageIcon(new ImageIcon("src/InterFace/Multi Player 1.png"), 150, 150);
+                player2Hover = resizeImageIcon(new ImageIcon("src/InterFace/Multi Player 2.png"), 150, 150);
             } catch (Exception e) {
                 System.out.println("Warning: Player images not found. Using default player icons.");
                 // في حالة عدم وجود الصور، نستخدم الأيقونات الافتراضية
-                player1Normal = createTextIcon("1 PLAYER", Color.CYAN, 120, 120);
-                player1Hover = createTextIcon("1 PLAYER", ACCENT_YELLOW, 120, 120);
-                player2Normal = createTextIcon("2 PLAYERS", Color.ORANGE, 120, 120);
-                player2Hover = createTextIcon("2 PLAYERS", ACCENT_YELLOW, 120, 120);
+                player1Normal = createTextIcon("1 PLAYER", Color.CYAN, 150, 150);
+                player1Hover = createTextIcon("1 PLAYER", ACCENT_YELLOW, 150, 150);
+                player2Normal = createTextIcon("2 PLAYERS", Color.ORANGE, 150, 150);
+                player2Hover = createTextIcon("2 PLAYERS", ACCENT_YELLOW, 150, 150);
             }
 
-            menuIcon = resizeImageIcon(new ImageIcon("src/icon.png"), 400, 400);
+            menuIcon = resizeImageIcon(new ImageIcon("src/InterFace/icon.png"), 400, 400);
 
-            easyBefore2 = resizeImageIcon(new ImageIcon("src/before 2.png"), 120, 50);
-            easyAfter1 = resizeImageIcon(new ImageIcon("src/after 1.png"), 120, 50);
-            easyAfter2 = resizeImageIcon(new ImageIcon("src/after 2.png"), 120, 50);
-            mediumBefore2 = resizeImageIcon(new ImageIcon("src/before 2.png"), 120, 50);
-            mediumAfter1 = resizeImageIcon(new ImageIcon("src/after 1.png"), 120, 50);
-            mediumAfter2 = resizeImageIcon(new ImageIcon("src/after 2.png"), 120, 50);
-            hardBefore2 = resizeImageIcon(new ImageIcon("src/before 2.png"), 120, 50);
-            hardAfter1 = resizeImageIcon(new ImageIcon("src/after 1.png"), 120, 50);
-            hardAfter2 = resizeImageIcon(new ImageIcon("src/after 2.png"), 120, 50);
+            easyBefore2 = resizeImageIcon(new ImageIcon("src/InterFace/before 2.png"), 120, 50);
+            easyAfter1 = resizeImageIcon(new ImageIcon("src/InterFace/after 1.png"), 120, 50);
+            easyAfter2 = resizeImageIcon(new ImageIcon("src/InterFace/after 2.png"), 120, 50);
+            mediumBefore2 = resizeImageIcon(new ImageIcon("src/InterFace/before 2.png"), 120, 50);
+            mediumAfter1 = resizeImageIcon(new ImageIcon("src/InterFace/after 1.png"), 120, 50);
+            mediumAfter2 = resizeImageIcon(new ImageIcon("src/InterFace/after 2.png"), 120, 50);
+            hardBefore2 = resizeImageIcon(new ImageIcon("src/InterFace/before 2.png"), 120, 50);
+            hardAfter1 = resizeImageIcon(new ImageIcon("src/InterFace/after 1.png"), 120, 50);
+            hardAfter2 = resizeImageIcon(new ImageIcon("src/InterFace/after 2.png"), 120, 50);
 
         } catch (Exception e) {
             System.out.println("Error loading images: " + e.getMessage());
@@ -389,14 +389,14 @@ public class FeedingFrenzyMenu extends JFrame {
         JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
         panel.setLayout(new BorderLayout());
 
-        JLabel titleLabel = new JLabel("SELECT DIFFICULTY", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
+        JLabel titleLabel = new JLabel("S E L E C T   ~  D I F F I C U L T Y", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 36));
         titleLabel.setForeground(ACCENT_YELLOW);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,20,0));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,150,0));
         panel.add(titleLabel, BorderLayout.NORTH);
 
         // استخدام FlowLayout لتنظيم الأزرار أفقياً
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 50));
         buttonsPanel.setOpaque(false);
 
         DifficultyButton btnEasy = new DifficultyButton("EASY", easyBefore2, easyAfter1, easyAfter2);
@@ -473,32 +473,35 @@ public class FeedingFrenzyMenu extends JFrame {
 
         // إظهار الصعوبة باللون الصحيح
         String displayDifficulty = (difficulty != null) ? difficulty : "N/A";
-        JLabel difficultyLabel = new JLabel("DIFFICULTY: " + displayDifficulty, SwingConstants.CENTER);
-        difficultyLabel.setFont(new Font("Arial", Font.BOLD, 28));
+        JLabel difficultyLabel = new JLabel("D I F F I C U L T Y   ~   " + displayDifficulty, SwingConstants.CENTER);
+        difficultyLabel.setFont(new Font("Serif", Font.BOLD, 30));
         difficultyLabel.setForeground(getDifficultyColor());
-        difficultyLabel.setBorder(BorderFactory.createEmptyBorder(50,0,20,0));
+        difficultyLabel.setBorder(BorderFactory.createEmptyBorder(50,0,80,0));
         panel.add(difficultyLabel, BorderLayout.NORTH);
 
-        // لوحة لاختيار اللاعبين (لتنظيم الأزرار أفقياً وإضافة المسافة)
-        JPanel playersPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 60, 50)); // مسافة أفقية 60
+        // لوحة لاعبين عمودية
+        JPanel playersPanel = new JPanel();
+        playersPanel.setLayout(new BoxLayout(playersPanel, BoxLayout.Y_AXIS));
         playersPanel.setOpaque(false);
+        playersPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // زر اللاعب الواحد مع تأثير Hover
+        // زر اللاعب الواحد
         JButton btn1Player = new JButton(player1Normal);
         btn1Player.setBorderPainted(false);
         btn1Player.setContentAreaFilled(false);
         btn1Player.setFocusPainted(false);
         btn1Player.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn1Player.addActionListener(e -> { playerCount = 1; startGame(); });
-
-        // إضافة تأثير Hover لزر اللاعب الواحد
+        btn1Player.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btn1Player.addActionListener(e -> {
+            playerCount = 1;
+            showLevelsAfterPlayerSelection();
+        });
         btn1Player.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
                 btn1Player.setIcon(player1Hover);
                 btn1Player.setBorder(BorderFactory.createLineBorder(Color.CYAN, 3));
             }
-
             @Override
             public void mouseExited(MouseEvent e) {
                 btn1Player.setIcon(player1Normal);
@@ -506,22 +509,23 @@ public class FeedingFrenzyMenu extends JFrame {
             }
         });
 
-        // زر اللاعبين مع تأثير Hover
+        // زر اللاعبين
         JButton btn2Players = new JButton(player2Normal);
         btn2Players.setBorderPainted(false);
         btn2Players.setContentAreaFilled(false);
         btn2Players.setFocusPainted(false);
         btn2Players.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn2Players.addActionListener(e -> { playerCount = 2; startGame(); });
-
-        // إضافة تأثير Hover لزر اللاعبين
+        btn2Players.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btn2Players.addActionListener(e -> {
+            playerCount = 2;
+            showLevelsAfterPlayerSelection();
+        });
         btn2Players.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
                 btn2Players.setIcon(player2Hover);
                 btn2Players.setBorder(BorderFactory.createLineBorder(Color.MAGENTA, 3));
             }
-
             @Override
             public void mouseExited(MouseEvent e) {
                 btn2Players.setIcon(player2Normal);
@@ -529,11 +533,14 @@ public class FeedingFrenzyMenu extends JFrame {
             }
         });
 
+        // إضافة الأزرار عموديًا مع مسافة بينهم
         playersPanel.add(btn1Player);
+        playersPanel.add(Box.createRigidArea(new Dimension(0, 80))); // مسافة بين الأزرار
         playersPanel.add(btn2Players);
 
         panel.add(playersPanel, BorderLayout.CENTER);
 
+        // زر BACK أسفل
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
         navPanel.setOpaque(false);
         JButton backBtn = createStyledNavButton("← BACK", new Color(100, 100, 200), e -> cardLayout.show(mainPanel, "DIFFICULTY_SELECT"));
@@ -542,6 +549,7 @@ public class FeedingFrenzyMenu extends JFrame {
 
         return panel;
     }
+
 
     private Color getDifficultyColor() {
         if (difficulty == null) return Color.WHITE;
@@ -723,6 +731,83 @@ public class FeedingFrenzyMenu extends JFrame {
         pauseDialog.setContentPane(menuPanel);
         pauseDialog.setVisible(true);
     }
+    private DifficultyButton selectedLevelButton = null; // لتخزين المستوى المختار
+
+    private void showLevelsAfterPlayerSelection() {
+        JPanel fullPanel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
+        fullPanel.setLayout(new BorderLayout());
+
+        // عنوان Levels
+        JLabel titleLabel = new JLabel("L  E  V  E  L  S", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 40));
+        titleLabel.setForeground(ACCENT_YELLOW);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,70,0));
+        fullPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // لوحة المربعات رأسياً
+        JPanel levelsPanel = new JPanel();
+        levelsPanel.setLayout(new BoxLayout(levelsPanel, BoxLayout.Y_AXIS));
+        levelsPanel.setOpaque(false);
+        levelsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JButton level1 = new JButton("LEVEL 1");
+        level1.setBackground(Color.GREEN);
+        level1.setForeground(Color.WHITE);
+        level1.setFont(new Font("Arial", Font.BOLD, 24));
+        level1.setFocusPainted(false);
+        level1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        level1.setMaximumSize(new Dimension(200, 120));
+        level1.addActionListener(e -> {
+            difficulty = "EASY";
+            startGame();
+        });
+
+        JButton level2 = new JButton("LEVEL 2");
+        level2.setBackground(Color.ORANGE);
+        level2.setForeground(Color.WHITE);
+        level2.setFont(new Font("Arial", Font.BOLD, 24));
+        level2.setFocusPainted(false);
+        level2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        level2.setMaximumSize(new Dimension(200, 120));
+        level2.addActionListener(e -> {
+            difficulty = "MEDIUM";
+            startGame();
+        });
+
+        JButton level3 = new JButton("LEVEL 3");
+        level3.setBackground(Color.RED);
+        level3.setForeground(Color.WHITE);
+        level3.setFont(new Font("Arial", Font.BOLD, 24));
+        level3.setFocusPainted(false);
+        level3.setAlignmentX(Component.CENTER_ALIGNMENT);
+        level3.setMaximumSize(new Dimension(200, 120));
+        level3.addActionListener(e -> {
+            difficulty = "HARD";
+            startGame();
+        });
+
+        // إضافة المربعات إلى اللوحة مع مسافات
+        levelsPanel.add(level1);
+        levelsPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        levelsPanel.add(level2);
+        levelsPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        levelsPanel.add(level3);
+
+        fullPanel.add(levelsPanel, BorderLayout.CENTER);
+
+        // زر BACK فقط
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
+        navPanel.setOpaque(false);
+        JButton backBtn = createStyledNavButton("← BACK", new Color(100, 100, 200),
+                e -> cardLayout.show(mainPanel, "PLAYER_SELECT"));
+        navPanel.add(backBtn);
+        fullPanel.add(navPanel, BorderLayout.SOUTH);
+
+        mainPanel.add(fullPanel, "PLAYER_LEVELS");
+        cardLayout.show(mainPanel, "PLAYER_LEVELS");
+    }
+
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(FeedingFrenzyMenu::new);

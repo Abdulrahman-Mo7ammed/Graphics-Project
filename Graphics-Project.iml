@@ -7,9 +7,12 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="gluegen-rt" level="project" />
     <orderEntry type="library" name="jogl" level="project" />
     <orderEntry type="library" name="lib64" level="project" />
+<<<<<<< HEAD
     <orderEntry type="library" name="lib1" level="project" />
+=======
+    <orderEntry type="library" name="gluegen-rt" level="project" />
+>>>>>>> 17eebf2dcd39c09418884964c8ac7b8f3add2439
   </component>
 </module>

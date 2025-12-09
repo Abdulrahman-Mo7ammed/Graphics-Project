@@ -14,7 +14,7 @@ public class Quizz extends JFrame {
         AnimListener listener = new QuizGLEventListener();
         glcanvas = new GLCanvas();
         glcanvas.addGLEventListener(listener);
-        glcanvas.addKeyListener(listener);
+        glcanvas.addKeyListener(listener); // canvas هو GLCanvas
         glcanvas.addMouseMotionListener(listener);
         getContentPane().add(glcanvas, BorderLayout.CENTER);
         animator = new FPSAnimator(15);
@@ -24,9 +24,11 @@ public class Quizz extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 1000);
         setLocationRelativeTo(null);
-        setVisible(true);
         setFocusable(true);
+        setVisible(true);
+        glcanvas.requestFocusInWindow();
         glcanvas.requestFocus();
+
     }
 }
 
