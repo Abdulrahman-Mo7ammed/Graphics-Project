@@ -237,13 +237,13 @@ public class QuizGLEventListener extends AnimListener {
 
         // Player 1 Score LEFT
         gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
-        String text1 = "P1 Score: " + fishes.get(0).score;
+        String text1 = "P2 Score: " + fishes.get(1).score;
         for (char c : text1.toCharArray())
             glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
 
 
         gl.glRasterPos2f(maxWidth - 150, maxHeight - 20);
-        String text2 = "P2 Score: " + fishes.get(1).score;
+        String text2 = "P1 Score: " + fishes.get(0).score;
         for (char c : text2.toCharArray())
             glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
 
