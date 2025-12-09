@@ -29,6 +29,9 @@ public class QuizGLEventListener extends AnimListener {
     double enemySpeedMultiplier = 1.0;
     int initialLives = 3;
 
+    private Difficulty currentDifficulty = Difficulty.EASY;
+    private int currentBackgroundTextureIndex;
+
     int spawnDelay = 20;
     int spawnCounter = 20;
 
@@ -45,11 +48,15 @@ public class QuizGLEventListener extends AnimListener {
             "Yellow_fish.png", "Yellow_eat1.png", "Yellow_eat2.png", "Yellow_eat3.png",
             "Whale.png", "Whale_eat1.png", "Whale_eat2.png", "Whale_eat3.png",
             "Shark.png", "Shark_eat1.png", "Shark_eat2.png", "Shark_eat3.png","heart1.png",
-            "sea.png"
+            "sea.png" , "medium.png" , "hard.png"
     };
 
     TextureReader.Texture[] texture = new TextureReader.Texture[textureNames.length];
     int[] textures = new int[textureNames.length];
+
+    private int easyTextureIndex;
+    private int mediumTextureIndex;
+    private int hardTextureIndex;
 
     BitSet keyBits = new BitSet(256);
 
@@ -81,7 +88,6 @@ public class QuizGLEventListener extends AnimListener {
             audioManager.stopBackgroundMusic();
         }};
 
-    private Difficulty currentDifficulty = Difficulty.EASY;
 
     public void init(GLAutoDrawable gld) {
         GL gl = gld.getGL();
@@ -180,13 +186,19 @@ public class QuizGLEventListener extends AnimListener {
         loadHighScore();
 
 
+
+
+        for (Fish f : fishes)
+            f.setScoreCallback(() -> f.score += 10);
+
+        for (Fish f : fishes)
+            f.setScoreCallback(() -> f.score += 10);
+
+        easyTextureIndex = textureNames.length - 3;
+        mediumTextureIndex = textureNames.length - 2;
+        hardTextureIndex = textureNames.length - 1;
+
         setDifficulty(Difficulty.EASY);
-
-        for (Fish f : fishes)
-            f.setScoreCallback(() -> f.score += 10);
-
-        for (Fish f : fishes)
-            f.setScoreCallback(() -> f.score += 10);
 
 
     }
@@ -255,7 +267,6 @@ public class QuizGLEventListener extends AnimListener {
     public void drawLives(GL gl) {
         GLU glu = new GLU();
 
-        // 1. تجهيز الشاشة للرسم ثنائي الأبعاد (UI)
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPushMatrix();
         gl.glLoadIdentity();
@@ -267,7 +278,7 @@ public class QuizGLEventListener extends AnimListener {
 
         gl.glEnable(GL.GL_BLEND);
 
-        int heartIndex = textures.length - 2;
+        int heartIndex = textures.length - 4;
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[heartIndex]);
 
         // 3. اللف على اللاعبين
@@ -357,7 +368,7 @@ public class QuizGLEventListener extends AnimListener {
 
     public void drawBackground(GL gl){
         gl.glEnable(GL.GL_BLEND);
-        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[textures.length - 1]);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[currentBackgroundTextureIndex]);
 
         gl.glPushMatrix();
         gl.glBegin(GL.GL_QUADS);
@@ -378,16 +389,19 @@ public class QuizGLEventListener extends AnimListener {
                 this.spawnDelay = 30;
                 this.enemySpeedMultiplier = 1;
                 this.initialLives = 3;
+                this.currentBackgroundTextureIndex = easyTextureIndex;
                 break;
             case MEDIUM:
                 this.spawnDelay = 20;
                 this.enemySpeedMultiplier = 1.85;
                 this.initialLives = 3;
+                this.currentBackgroundTextureIndex = mediumTextureIndex;
                 break;
             case HARD:
                 this.spawnDelay = 10;
                 this.enemySpeedMultiplier = 2.5;
                 this.initialLives = 3;
+                this.currentBackgroundTextureIndex = hardTextureIndex;
                 break;
         }
         for (Fish f : fishes) {
