@@ -24,6 +24,10 @@ public class QuizGLEventListener extends AnimListener {
 
     private boolean menuIconState = false; // false = P, true = R
 
+    public void setAudioManager(AudioManager audioManager) {
+        this.audioManager = audioManager;
+    }
+
     public QuizGLEventListener(Difficulty difficulty) {
         this.currentDifficulty = difficulty;
     }
@@ -76,6 +80,8 @@ public class QuizGLEventListener extends AnimListener {
         // تعيين القيم الابتدائية
         for (Fish f : fishes) {
             f.Heart = this.initialLives;
+            f.x = 0;
+            f.y = 0;
             f.scale = 0.45;
             f.isAlive = true;
             f.score = 0;
@@ -239,7 +245,7 @@ public class QuizGLEventListener extends AnimListener {
         }
 
         loadHighScore();
-
+        setPlayerCount(1);
     }
 
     public void display(GLAutoDrawable gld) {
@@ -316,7 +322,7 @@ public class QuizGLEventListener extends AnimListener {
         if (!gameOver && !showWinScreen) {
             for (int i = 0; i < fishes.size(); i++) {
                 Fish f = fishes.get(i);
-                if (f.score >= 250) {
+                if (f.score >= 500) {
                     gameOver = true;
                     showWinScreen = true;
                     winner = i + 1;
@@ -417,13 +423,16 @@ public class QuizGLEventListener extends AnimListener {
             gl.glColor3f(1.0f, 1f, 1.0f);
 
             // P1 Score
-            gl.glRasterPos2f(-maxWidth + 15, maxHeight - 20);
-            String p1Text = "P1: " + fish1.score + " / " + 250;
+            gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
+            String p1Text = "P1: " + fish1.score + " / " + 1000;
             for (char c : p1Text.toCharArray())
-                glut.glutBitmapCharacter(GLUT.BITMAP_TIMES_ROMAN_24, c); // <--- تم التغيير
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c); // <--- تم التغيير
 
-
-
+            // P1 Controls
+            gl.glRasterPos2f(-maxWidth + 20, maxHeight - 40);
+            String p1Controls = "Controls: ARROW KEYS";
+            for (char c : p1Controls.toCharArray())
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c); // <--- تم التغيير
         }
 
         // معلومات اللاعب الثاني (P2) - أعلى اليمين
@@ -432,13 +441,24 @@ public class QuizGLEventListener extends AnimListener {
             gl.glColor3f(1.0f, 1f, 1f);
 
             // P2 Score
-            gl.glRasterPos2f(maxWidth - 85, maxHeight - 20);
-            String p2Text = "P2: " + fish2.score + " / " + 250;
+            gl.glRasterPos2f(maxWidth - 180, maxHeight - 20);
+            String p2Text = "P2: " + fish2.score + " / " + 1000;
             for (char c : p2Text.toCharArray())
-                glut.glutBitmapCharacter(GLUT.BITMAP_TIMES_ROMAN_24, c); // <--- تم التغيير
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c); // <--- تم التغيير
 
+            // P2 Controls
+            gl.glRasterPos2f(maxWidth - 180, maxHeight - 40);
+            String p2Controls = "Controls: WASD";
+            for (char c : p2Controls.toCharArray())
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c); // <--- تم التغيير
         }
 
+        // المعلومات العامة في المنتصف (Level | Difficulty)
+        gl.glColor3f(1.0f, 1.0f, 0.5f);
+        gl.glRasterPos2f(-80, maxHeight - 20); // <--- تم تعديل X والخط
+        String info = "Level " + currentLevel + " | " + currentDifficulty;
+        for (char c : info.toCharArray())
+            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c); // <--- تم التغيير
 
         gl.glEnable(GL.GL_TEXTURE_2D);
         gl.glPopMatrix();

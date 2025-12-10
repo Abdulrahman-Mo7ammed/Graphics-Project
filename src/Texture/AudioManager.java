@@ -11,9 +11,135 @@ public class AudioManager {
     private float volume = 0.7f;
     private boolean muted = false;
     private Clip backgroundMusic;
+    private Clip menuMusicClip;
+    private Clip gameMusicClip;
 
+    // تشغيل موسيقى القائمة الرئيسية
+    public void playMenuBackgroundMusic() {
+        if (muted) return;
 
+        try {
 
+            stopGameMusic();
+
+            // أوقف موسيقى القوائم القديمة لو شغالة
+            if (menuMusicClip != null && menuMusicClip.isRunning()) {
+                menuMusicClip.stop();
+            }
+
+            // شغل موسيقى القوائم الجديدة
+            menuMusicClip = soundClips.get("menu_background");
+            if (menuMusicClip != null) {
+                menuMusicClip.setFramePosition(0);
+                setClipVolume(menuMusicClip, volume * 0.3f); // صوت خفيف للقوائم
+                menuMusicClip.loop(Clip.LOOP_CONTINUOUSLY);
+                System.out.println("🎵 موسيقى القوائم شغالة");
+
+            } else {
+                System.out.println("Warning: No background music loaded");
+            }
+        } catch (Exception e) {
+            System.err.println("Menu background music error: " + e.getMessage());
+        }
+    }
+
+    // تشغيل موسيقى اللعبة (أعلى صوتاً)
+    public void playGameBackgroundMusic() {
+        if (muted) return;
+
+        try {
+
+            stopMenuMusic();
+
+            // أوقف موسيقى اللعبة القديمة
+            if (gameMusicClip != null && gameMusicClip.isRunning()) {
+                gameMusicClip.stop();
+            }
+
+            // شغل موسيقى اللعبة
+            gameMusicClip = soundClips.get("game_music");
+            if (gameMusicClip != null) {
+                gameMusicClip.setFramePosition(0);
+                setClipVolume(gameMusicClip, volume * 0.2f); // صوت أخف للعبة
+                gameMusicClip.loop(Clip.LOOP_CONTINUOUSLY);
+                System.out.println("🎮 موسيقى اللعبة شغالة");
+            }
+        } catch (Exception e) {
+            System.err.println("Game background music error: " + e.getMessage());
+        }
+    }
+
+    public void stopMenuMusic() {
+        if (menuMusicClip != null && menuMusicClip.isRunning()) {
+            menuMusicClip.stop();
+            System.out.println("⏸️ موسيقى القوائم أوقفت");
+        }
+    }
+
+    public void stopGameMusic() {
+        if (gameMusicClip != null && gameMusicClip.isRunning()) {
+            gameMusicClip.stop();
+            System.out.println("⏸️ موسيقى اللعبة أوقفت");
+        }
+    }
+
+    // دالة لإيقاف كل الموسيقى
+    public void stopAllMusic() {
+        stopMenuMusic();
+        stopGameMusic();
+    }
+    // تشغيل صوت زر
+    public void playButtonClick() {
+        if (muted) return;
+
+        try {
+            // حاول استخدام الملف المخصص للأزرار
+            Clip clip = soundClips.get("button_click");
+
+            // إذا مش موجود، استخدم أي صوت مناسب
+            if (clip == null) {
+                clip = soundClips.get("zap");
+                if (clip == null) {
+                    clip = soundClips.get("bubble");
+                }
+            }
+
+            if (clip != null) {
+                if (clip.isRunning()) clip.stop();
+                clip.setFramePosition(0);
+                setClipVolume(clip, volume * 0.5f); // صوت متوسط للأزرار
+                clip.start();
+            }
+        } catch (Exception e) {
+            System.err.println("Button click error: " + e.getMessage());
+        }
+    }
+
+    // تشغيل صوت خاص (لأفعال معينة)
+    public void playSpecialSound(String name) {
+        if (muted) return;
+
+        try {
+            Clip clip = soundClips.get(name);
+            if (clip != null) {
+                if (clip.isRunning()) clip.stop();
+                clip.setFramePosition(0);
+                setClipVolume(clip, volume);
+                clip.start();
+            }
+        } catch (Exception e) {
+            System.err.println("Special sound error: " + e.getMessage());
+        }
+    }
+
+    // دالة تحميله لو مش موجود
+    public boolean ensureSoundLoaded(String name, String fileName) {
+        if (!soundClips.containsKey(name)) {
+            String path = System.getProperty("user.dir") + "\\Assets\\sounds\\" + fileName;
+            return loadSound(name, path);
+        }
+        return true;
+    }
 
     public AudioManager() {
         soundClips = new HashMap<>();
@@ -246,10 +372,19 @@ public class AudioManager {
     public void toggleMute() {
         muted = !muted;
         if (muted) {
-            stopAllSounds();
-        } else if (backgroundMusic != null) {
-            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+            // إيقاف كل الموسيقى
+            if (menuMusicClip != null && menuMusicClip.isRunning()) {
+                menuMusicClip.stop();
+            }
+            if (gameMusicClip != null && gameMusicClip.isRunning()) {
+                gameMusicClip.stop();
+            }
+        } else {
+            if (menuMusicClip != null) {
+                menuMusicClip.loop(Clip.LOOP_CONTINUOUSLY);
+            }
         }
+
     }
 
     public void stopAllSounds() {

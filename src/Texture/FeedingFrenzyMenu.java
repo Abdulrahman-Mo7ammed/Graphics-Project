@@ -44,6 +44,10 @@
         private final Color HOVER_CYAN = new Color(0, 150, 200);
         private final Color ACCENT_YELLOW = new Color(255, 200, 0);
 
+        // اضافة الاصوات
+        private AudioManager audioManager;
+        private static final String SOUNDS_PATH = System.getProperty("user.dir") + "\\Assets\\sounds\\";
+
         public FeedingFrenzyMenu() {
             setTitle("Feeding Frenzy");
             setSize(800, 800);
@@ -52,6 +56,7 @@
             setResizable(false);
 
             loadImages();
+            initializeAudio();
 
             cardLayout = new CardLayout();
             mainPanel = new JPanel(cardLayout);
@@ -68,6 +73,65 @@
             cardLayout.show(mainPanel, "MAIN_MENU");
 
             setVisible(true);
+        }
+
+        private void initializeAudio() {
+            audioManager = new AudioManager();
+
+            try {
+                // موسيقى الخلفية للقائمة
+                String menuMusicPath = SOUNDS_PATH + "game-background.wav";
+                if (new File(menuMusicPath).exists()) {
+                    audioManager.loadSound("menu_background", menuMusicPath);
+                } else {
+                    audioManager.ensureSoundLoaded("background", "background .wav");
+                }
+
+                // موسيقى الخلفية للقائمة
+                String gameMusicPath = SOUNDS_PATH + "background.wav";
+                if (new File(gameMusicPath).exists()) {
+                    audioManager.loadSound("game_music", gameMusicPath);
+                } else {
+                    audioManager.ensureSoundLoaded("background", "background .wav");
+                }
+
+                // صوت الأزرار
+                String buttonSoundPath = SOUNDS_PATH + "button-click.wav";
+                if (new File(buttonSoundPath).exists()) {
+                    audioManager.loadSound("button_click", buttonSoundPath);
+                } else {
+                    audioManager.ensureSoundLoaded("zap", "zapsplat_cartoon.wav");
+                }
+
+                // تشغيل موسيقى القائمة
+                audioManager.playMenuBackgroundMusic();
+
+            } catch (Exception e) {
+                System.out.println("Audio initialization error: " + e.getMessage());
+            }
+        }
+        private void playButtonClickSound() {
+            if (audioManager != null) {
+                audioManager.playButtonClick();
+            }
+        }
+
+        private void playSelectionSound() {
+            if (audioManager != null) {
+                audioManager.playSpecialSound("bubble");
+            }
+        }
+
+        private void stopMenuMusic() {
+            if (audioManager != null) {
+                audioManager.stopBackgroundMusic();
+            }
+        }
+
+        private void playGameMusic() {
+            if (audioManager != null) {
+                audioManager.playGameBackgroundMusic();
+            }
         }
 
         // =========================================================================
@@ -230,9 +294,23 @@
             buttonContainer.setLayout(new FlowLayout(FlowLayout.CENTER, 30, 20));
             buttonContainer.setOpaque(false);
 
-            MenuButton btnNewGame = new MenuButton(newGameNormal, newGameHover, "NEW_GAME");
-            MenuButton btnOptions = new MenuButton(gameOptionsNormal, gameOptionsHover, "OPTIONS");
-            MenuButton btnExit = new MenuButton(exitNormal, exitHover, "EXIT");
+            MenuButton btnNewGame = new MenuButton(newGameNormal, newGameHover, "NEW_GAME", audioManager);
+            btnNewGame.addActionListener(e -> {
+                playButtonClickSound();
+                handleMainMenu("NEW_GAME");
+            });
+
+            MenuButton btnOptions = new MenuButton(gameOptionsNormal, gameOptionsHover, "OPTIONS", audioManager);
+            btnOptions.addActionListener(e -> {
+                playButtonClickSound();
+                handleMainMenu("OPTIONS");
+            });
+
+            MenuButton btnExit = new MenuButton(exitNormal, exitHover, "EXIT", audioManager);
+            btnExit.addActionListener(e -> {
+                playButtonClickSound();
+                handleMainMenu("EXIT");
+            });
 
             btnNewGame.addActionListener(e -> handleMainMenu("NEW_GAME"));
             btnOptions.addActionListener(e -> handleMainMenu("OPTIONS"));
@@ -250,11 +328,13 @@
         static class MenuButton extends JButton {
             private final ImageIcon normalIcon;
             private final ImageIcon hoverIcon;
+            private AudioManager audioManager;
 
-            public MenuButton(ImageIcon normal, ImageIcon hover, String action) {
+            public MenuButton(ImageIcon normal, ImageIcon hover, String action, AudioManager audioManager) {
                 super(normal);
                 this.normalIcon = normal;
                 this.hoverIcon = hover;
+                this.audioManager = audioManager;
                 setActionCommand(action);
                 setBorderPainted(false);
                 setContentAreaFilled(false);
@@ -263,10 +343,29 @@
                 setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                 addMouseListener(new MouseAdapter() {
                     @Override
-                    public void mouseEntered(MouseEvent e) { setIcon(hoverIcon); }
+                    public void mouseEntered(MouseEvent e) {
+                        setIcon(hoverIcon);
+                        playHoverSound();
+                    }
                     @Override
                     public void mouseExited(MouseEvent e) { setIcon(normalIcon); }
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        playClickSound();
+                    }
                 });
+            }
+
+            private void playClickSound() {
+                if (audioManager != null) {
+                    audioManager.playButtonClick();
+                }
+            }
+
+            private void playHoverSound() {
+                if (audioManager != null) {
+                    audioManager.playSpecialSound("bubble");
+                }
             }
         }
 
@@ -299,6 +398,7 @@
                     difficulty = null;
                     selectedLevel = 1;
                     selectedDifficultyButton = null;
+                    audioManager.playMenuBackgroundMusic();
                     cardLayout.show(mainPanel, "MAIN_MENU");
                     break;
             }
@@ -314,7 +414,7 @@
             panel.setLayout(new BorderLayout());
 
             JLabel titleLabel = new JLabel("SELECT NUMBER OF PLAYERS", SwingConstants.CENTER);
-            titleLabel.setFont(new Font("Arial", Font.BOLD, 40));
+            titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
             titleLabel.setForeground(ACCENT_YELLOW);
             titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,50,0));
             panel.add(titleLabel, BorderLayout.NORTH);
@@ -331,6 +431,7 @@
                     "Challenge yourself in single player mode",
                     player1Normal, player1Hover);
             btn1Player.addActionListener(e -> {
+                playButtonClickSound();
                 playerCount = 1;
                 showLevelsAfterPlayerSelection();
             });
@@ -340,6 +441,7 @@
                     "Play with a friend in cooperative mode",
                     player2Normal, player2Hover);
             btn2Players.addActionListener(e -> {
+                playButtonClickSound();
                 playerCount = 2;
                 showLevelsAfterPlayerSelection();
             });
@@ -412,6 +514,7 @@
             button.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
+                    playSelectionSound();
                     iconLabel.setIcon(hoverIcon);
                     buttonPanel.setBackground(new Color(255, 255, 255, 50));
                     buttonPanel.setBorder(BorderFactory.createLineBorder(ACCENT_YELLOW, 2, true));
@@ -669,12 +772,26 @@
         // =========================================================================
 
         private void startGameWithLevelAndDifficulty(int level, QuizGLEventListener.Difficulty difficulty) {
+
+            playButtonClickSound();
+            stopMenuMusic();
             dispose();
 
             QuizGLEventListener listener = new QuizGLEventListener(difficulty);
             listener.setPlayerCount(playerCount);
             listener.setLevel(level);
             listener.setDifficulty(difficulty);
+
+            if (audioManager != null) {
+                listener.setAudioManager(audioManager);
+            }
+
+            // تشغيل موسيقى اللعبة بعد بدئها
+            SwingUtilities.invokeLater(() -> {
+                if (audioManager != null) {
+                    audioManager.playGameBackgroundMusic();
+                }
+            });
 
             JFrame gameFrame = new JFrame("Feeding Frenzy - Level " + level + " - " + difficulty);
             GLCanvas canvas = new GLCanvas();
@@ -734,9 +851,62 @@
         }
 
         private JPanel createOptionsScreen() {
-            JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
 
             JPanel contentPanel = new JPanel();
+            // ========== SOUND CONTROLS ==========
+            JPanel soundControlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+            soundControlPanel.setOpaque(false);
+
+            JLabel soundLabel = new JLabel("🔊 Sound: ");
+            soundLabel.setForeground(Color.WHITE);
+            soundLabel.setFont(new Font("Arial", Font.BOLD, 20));
+            soundControlPanel.add(soundLabel);
+
+            JToggleButton soundToggle = new JToggleButton("ON", true);
+            soundToggle.setFont(new Font("Arial", Font.BOLD, 16));
+            soundToggle.setForeground(Color.WHITE);
+            soundToggle.setBackground(new Color(0, 150, 0));
+            soundToggle.addActionListener(e -> {
+                playButtonClickSound();
+                boolean enabled = soundToggle.isSelected();
+                soundToggle.setText(enabled ? "ON" : "OFF");
+                soundToggle.setBackground(enabled ? new Color(0, 150, 0) : Color.RED);
+
+                if (audioManager != null) {
+                    audioManager.toggleMute();
+                }
+            });
+            soundControlPanel.add(soundToggle);
+
+            contentPanel.add(soundControlPanel);
+            contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+            // Volume Slider
+            JPanel volumePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+            volumePanel.setOpaque(false);
+
+            JLabel volumeLabel = new JLabel("📢 Volume: ");
+            volumeLabel.setForeground(Color.WHITE);
+            volumeLabel.setFont(new Font("Arial", Font.BOLD, 20));
+            volumePanel.add(volumeLabel);
+
+            JSlider volumeSlider = new JSlider(0, 100, 70);
+            volumeSlider.setPreferredSize(new Dimension(200, 40));
+            volumeSlider.setPaintTicks(true);
+            volumeSlider.setPaintLabels(true);
+            volumeSlider.addChangeListener(e -> {
+                if (!volumeSlider.getValueIsAdjusting() && audioManager != null) {
+                    float volume = volumeSlider.getValue() / 100.0f;
+                    audioManager.setVolume(volume);
+                    playButtonClickSound(); // تشغيل صوت عند التغيير
+                }
+            });
+            volumePanel.add(volumeSlider);
+            contentPanel.add(volumePanel);
+            contentPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+
+            JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
+
             contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
             contentPanel.setOpaque(false);
             contentPanel.setBorder(BorderFactory.createEmptyBorder(80, 50, 50, 50));
@@ -746,18 +916,6 @@
             titleLabel.setForeground(ACCENT_YELLOW);
             titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             contentPanel.add(titleLabel);
-            contentPanel.add(Box.createRigidArea(new Dimension(0, 50)));
-
-            JLabel opt1 = new JLabel("Sound Volume: 80%");
-            opt1.setForeground(Color.WHITE); opt1.setFont(new Font("Arial", Font.PLAIN, 18));
-            opt1.setAlignmentX(Component.CENTER_ALIGNMENT);
-            contentPanel.add(opt1);
-            contentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-
-            JLabel opt2 = new JLabel("Music Volume: 50%");
-            opt2.setForeground(Color.WHITE); opt2.setFont(new Font("Arial", Font.PLAIN, 18));
-            opt2.setAlignmentX(Component.CENTER_ALIGNMENT);
-            contentPanel.add(opt2);
             contentPanel.add(Box.createRigidArea(new Dimension(0, 50)));
 
             JButton backBtn = createStyledNavButton("← BACK TO MAIN MENU", PRIMARY_BLUE.darker(),
