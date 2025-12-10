@@ -263,7 +263,6 @@ public class QuizGLEventListener extends AnimListener {
 
         drawScoreAndInfo(gl);
         drawLives(gl);
-        drawMenuIcon(gl);
 
         if (gameOver && showGameOverScreen) {
             drawGameOverScreen(gl);
@@ -372,12 +371,12 @@ public class QuizGLEventListener extends AnimListener {
 
                 // اللاعب الأول: أعلى اليسار
                 if (i == 0) {
-                    x = -maxWidth + 20 + (j * spacing);
+                    x = maxWidth - 30 - (j * spacing);
                     y = maxHeight - 40;
                 }
                 // اللاعب الثاني: أعلى اليمين
                 else {
-                    x = maxWidth - 40 - (j * spacing);
+                    x = -maxWidth + 20 + (j * spacing);
                     y = maxHeight - 40;
                 }
 
@@ -414,42 +413,48 @@ public class QuizGLEventListener extends AnimListener {
 
         gl.glDisable(GL.GL_TEXTURE_2D);
 
-        // معلومات اللاعب الأول (أعلى اليسار)
+        // معلومات اللاعب الأول (P1) - أعلى اليسار
         if (fishes.size() > 0) {
             Fish fish1 = fishes.get(0);
             gl.glColor3f(1.0f, 1f, 1.0f);
+
+            // P1 Score
             gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
             String p1Text = "P1: " + fish1.score + " / " + 1000;
             for (char c : p1Text.toCharArray())
-                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c);
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c); // <--- تم التغيير
 
-            gl.glRasterPos2f(-maxWidth + 20, maxHeight - 35);
+            // P1 Controls
+            gl.glRasterPos2f(-maxWidth + 20, maxHeight - 40);
             String p1Controls = "Controls: ARROW KEYS";
             for (char c : p1Controls.toCharArray())
-                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_10, c);
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c); // <--- تم التغيير
         }
 
-        // معلومات اللاعب الثاني (أعلى اليمين)
+        // معلومات اللاعب الثاني (P2) - أعلى اليمين
         if (playerCount == 2 && fishes.size() > 1) {
             Fish fish2 = fishes.get(1);
             gl.glColor3f(1.0f, 1f, 1f);
+
+            // P2 Score
             gl.glRasterPos2f(maxWidth - 180, maxHeight - 20);
             String p2Text = "P2: " + fish2.score + " / " + 1000;
             for (char c : p2Text.toCharArray())
-                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c);
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c); // <--- تم التغيير
 
-            gl.glRasterPos2f(maxWidth - 180, maxHeight - 35);
+            // P2 Controls
+            gl.glRasterPos2f(maxWidth - 180, maxHeight - 40);
             String p2Controls = "Controls: WASD";
             for (char c : p2Controls.toCharArray())
-                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_10, c);
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c); // <--- تم التغيير
         }
 
-        // المعلومات العامة في المنتصف
+        // المعلومات العامة في المنتصف (Level | Difficulty)
         gl.glColor3f(1.0f, 1.0f, 0.5f);
-        gl.glRasterPos2f(-50, maxHeight - 20);
+        gl.glRasterPos2f(-80, maxHeight - 20); // <--- تم تعديل X والخط
         String info = "Level " + currentLevel + " | " + currentDifficulty;
         for (char c : info.toCharArray())
-            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c);
+            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c); // <--- تم التغيير
 
         gl.glEnable(GL.GL_TEXTURE_2D);
         gl.glPopMatrix();
