@@ -314,7 +314,7 @@
             panel.setLayout(new BorderLayout());
 
             JLabel titleLabel = new JLabel("SELECT NUMBER OF PLAYERS", SwingConstants.CENTER);
-            titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
+            titleLabel.setFont(new Font("Arial", Font.BOLD, 40));
             titleLabel.setForeground(ACCENT_YELLOW);
             titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,50,0));
             panel.add(titleLabel, BorderLayout.NORTH);
