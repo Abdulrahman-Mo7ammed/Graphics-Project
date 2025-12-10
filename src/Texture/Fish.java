@@ -1,4 +1,5 @@
 package Texture;
+
 import javax.media.opengl.GL;
 import java.util.BitSet;
 import java.util.List;
@@ -7,29 +8,20 @@ import javax.media.opengl.glu.GLU;
 public class Fish {
 
     public interface SoundCallback {
-
-        /// /////// Sound Callback ///////////////
         void playEatSound();
         void playGrowthSound();
         void playCollisionSound();
         void playGameOverSound();
+        void playWinSound(); // تم إضافة هذا
     }
 
     private SoundCallback soundCallback;
-
-    public SoundCallback getSoundCallback() {
-        return soundCallback;
-    }
-
-    public void setSoundCallback(SoundCallback callback) {
-        this.soundCallback = callback;
-    }
-    ////////////////////////////////////////
-
+    private Runnable scoreCallback;
 
     public double x, y;
     public double scale = 0.45;
     public int Heart = 3;
+    public int score = 0;
 
     public boolean invincible = false;
     public int invincibleTimer = 0;
@@ -44,13 +36,6 @@ public class Fish {
 
     int LEFT, RIGHT, UP, DOWN;
 
-    public int score = 0;
-    Runnable scoreCallback;
-
-    public void setScoreCallback(Runnable r) {
-        this.scoreCallback = r;
-    }
-
     public Fish(double x, double y, int LEFT, int RIGHT, int UP, int DOWN) {
         this.x = x;
         this.y = y;
@@ -58,6 +43,18 @@ public class Fish {
         this.RIGHT = RIGHT;
         this.UP = UP;
         this.DOWN = DOWN;
+    }
+
+    public SoundCallback getSoundCallback() {
+        return soundCallback;
+    }
+
+    public void setSoundCallback(SoundCallback callback) {
+        this.soundCallback = callback;
+    }
+
+    public void setScoreCallback(Runnable r) {
+        this.scoreCallback = r;
     }
 
     public void startEating() {
@@ -77,20 +74,57 @@ public class Fish {
     public void updateMovement(BitSet keys, int maxW, int maxH) {
         if (!isAlive) return;
 
-
         boolean l = keys.get(LEFT);
         boolean r = keys.get(RIGHT);
         boolean u = keys.get(UP);
         boolean d = keys.get(DOWN);
 
-        if (l && u) { move(-5, 5, maxW, maxH); dir=5; reflection=1; animationIndex++; }
-        else if (r && u) { move( 5, 5, maxW, maxH); dir=4; reflection=-1; animationIndex++; }
-        else if (l && d) { move(-5,-5, maxW, maxH); dir=7; reflection=1; animationIndex++; }
-        else if (r && d) { move( 5,-5, maxW, maxH); dir=6; reflection=-1; animationIndex++; }
-        else if (l)     { move(-5, 0, maxW, maxH); dir=3; reflection=1; animationIndex++; }
-        else if (r)     { move( 5, 0, maxW, maxH); dir=1; reflection=-1; animationIndex++; }
-        else if (u)     { move( 0, 5, maxW, maxH); dir=0; animationIndex++;}
-        else if (d)     { move( 0,-5, maxW, maxH); dir=2; animationIndex++;}
+        if (l && u) {
+            move(-5, 5, maxW, maxH);
+            dir=5;
+            reflection=1;
+            animationIndex++;
+        }
+        else if (r && u) {
+            move(5, 5, maxW, maxH);
+            dir=4;
+            reflection=-1;
+            animationIndex++;
+        }
+        else if (l && d) {
+            move(-5,-5, maxW, maxH);
+            dir=7;
+            reflection=1;
+            animationIndex++;
+        }
+        else if (r && d) {
+            move(5,-5, maxW, maxH);
+            dir=6;
+            reflection=-1;
+            animationIndex++;
+        }
+        else if (l) {
+            move(-5, 0, maxW, maxH);
+            dir=3;
+            reflection=1;
+            animationIndex++;
+        }
+        else if (r) {
+            move(5, 0, maxW, maxH);
+            dir=1;
+            reflection=-1;
+            animationIndex++;
+        }
+        else if (u) {
+            move(0, 5, maxW, maxH);
+            dir=0;
+            animationIndex++;
+        }
+        else if (d) {
+            move(0,-5, maxW, maxH);
+            dir=2;
+            animationIndex++;
+        }
 
         if (animationIndex >= Integer.MAX_VALUE - 10)
             animationIndex = 0;
@@ -106,9 +140,7 @@ public class Fish {
     public void checkCollision(List<Enemy> enemies) {
         if (!isAlive) return;
 
-
         for (int i = 0; i < enemies.size(); i++) {
-
             Enemy enemy = enemies.get(i);
 
             double combinedRadius = (this.scale + enemy.type.scale) * 20;
@@ -117,40 +149,55 @@ public class Fish {
             double distSq = dx*dx + dy*dy;
 
             if (distSq < combinedRadius * combinedRadius) {
-
-                // collision_sound handling
+                // صوت التصادم
                 if (soundCallback != null) {
                     soundCallback.playCollisionSound();
                 }
 
                 if (this.scale > enemy.type.scale) {
+                    // السمكة تأكل العدو
                     enemies.remove(i);
                     i--;
 
                     this.startEating();
 
+                    // زيادة الحجم حسب نوع السمكة المأكولة
                     switch (enemy.type){
-                        case SMALL_FISH: scale+=0.04; break;
-                        case GREEN_FISH: scale+=0.05; break;
-                        case LEMON_FISH: scale+=0.06; break;
-                        case YELLOW_FISH: scale+=0.07; break;
-                        case SHARK: scale+=0.08; break;
-                        case WHALE: scale+=0.09; break;
+                        case SMALL_FISH:
+                            scale += 0.04;
+                            break;
+                        case GREEN_FISH:
+                            scale += 0.05;
+                            break;
+                        case LEMON_FISH:
+                            scale += 0.06;
+                            break;
+                        case YELLOW_FISH:
+                            scale += 0.07;
+                            break;
+                        case SHARK:
+                            scale += 0.08;
+                            break;
+                        case WHALE:
+                            scale += 0.09;
+                            break;
                     }
 
+                    // تحديد الحد الأقصى للحجم
                     if (scale > 3) scale = 3;
 
-                    if (scoreCallback != null) scoreCallback.run();
+                    // زيادة النقاط
+                    if (scoreCallback != null) {
+                        scoreCallback.run();
+                    }
 
-                    // eat and growth sounds handling
+                    // أصوات الأكل والنمو
                     if (soundCallback != null) {
                         soundCallback.playEatSound();
                         soundCallback.playGrowthSound();
                     }
-                }
-                else {
-
-
+                } else {
+                    // العدو يأكل السمكة
                     if (!invincible) {
                         enemy.eat();
                         Heart--;
@@ -158,16 +205,18 @@ public class Fish {
                         if (Heart <= 0) {
                             isAlive = false;
 
-                            // game_over sound handling
+                            // صوت نهاية اللعبة
                             if (soundCallback != null) {
                                 soundCallback.playGameOverSound();
                             }
                         } else {
-
+                            // جعل السمكة غير قابلة للإصابة مؤقتاً
                             invincible = true;
                             invincibleTimer = 50;
+                            // إعادة السمكة للمركز
                             x = 0;
                             y = 0;
+                            // تصغير الحجم
                             scale = 0.45;
                         }
                     }
@@ -179,6 +228,7 @@ public class Fish {
     public void draw(GL gl, int[] textures) {
         if (!isAlive) return;
 
+        // تأثير الوامض عند كونها غير قابلة للإصابة
         if (invincible) {
             if ((invincibleTimer / 5) % 2 == 0) return;
         }
@@ -188,15 +238,18 @@ public class Fish {
         int textureToBind;
 
         if (isEating) {
+            // استخدام إطار الأكل
             textureToBind = textures[2];
             eatCounter++;
             if (eatCounter > 5) isEating = false;
         } else {
+            // تبديل بين إطارين للحركة
             textureToBind = textures[animationIndex % 2];
         }
 
         gl.glBindTexture(GL.GL_TEXTURE_2D, textureToBind);
 
+        // تحويل الإحداثيات للعرض الصحيح
         double X = x / 300.0, Y = y / 200.0;
         double angle = (dir == 4 || dir == 5) ? -30 : 0;
         if (dir == 6 || dir == 7) angle = 30;
@@ -208,9 +261,9 @@ public class Fish {
 
         gl.glBegin(GL.GL_QUADS);
         gl.glTexCoord2f(0,0); gl.glVertex3f(-1,-1,-1);
-        gl.glTexCoord2f(1,0); gl.glVertex3f( 1,-1,-1);
-        gl.glTexCoord2f(1,1); gl.glVertex3f( 1, 1,-1);
-        gl.glTexCoord2f(0,1); gl.glVertex3f(-1, 1,-1);
+        gl.glTexCoord2f(1,0); gl.glVertex3f(1,-1,-1);
+        gl.glTexCoord2f(1,1); gl.glVertex3f(1,1,-1);
+        gl.glTexCoord2f(0,1); gl.glVertex3f(-1,1,-1);
         gl.glEnd();
 
         gl.glPopMatrix();

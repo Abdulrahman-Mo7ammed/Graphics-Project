@@ -3,11 +3,16 @@ package InterFace;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import Texture.QuizGLEventListener;
+import com.sun.opengl.util.FPSAnimator;
+
+import javax.media.opengl.GLCanvas;
 
 public class FeedingFrenzyMenu extends JFrame {
 
@@ -15,8 +20,8 @@ public class FeedingFrenzyMenu extends JFrame {
     private ImageIcon newGameNormal, newGameHover;
     private ImageIcon gameOptionsNormal, gameOptionsHover;
     private ImageIcon exitNormal, exitHover;
-    private ImageIcon player1Normal, player1Hover; // تم تغيير الأسماء
-    private ImageIcon player2Normal, player2Hover; // تم تغيير الأسماء
+    private ImageIcon player1Normal, player1Hover;
+    private ImageIcon player2Normal, player2Hover;
     private ImageIcon menuIcon;
     private ImageIcon easyBefore2, easyAfter1, easyAfter2;
     private ImageIcon mediumBefore2, mediumAfter1, mediumAfter2;
@@ -27,13 +32,12 @@ public class FeedingFrenzyMenu extends JFrame {
     private final JPanel mainPanel;
     private final CardLayout cardLayout;
     private int playerCount = 1;
-    private String difficulty = null;
+    private QuizGLEventListener.Difficulty difficulty;
+    private int selectedLevel = 1; // إضافة هذا المتغير
     private DifficultyButton selectedDifficultyButton = null;
-    private JButton difficultyNextBtn;
 
-    // متغيرات لتخزين اللوحات القابلة للتحديث لضمان التحديث الصحيح
+    // متغيرات لتخزين اللوحات القابلة للتحديث
     private JPanel playerSelectionPanel;
-    private JPanel gameScreenPanel;
 
     // ألوان مُحسَّنة
     private final Color PRIMARY_BLUE = new Color(0, 100, 150);
@@ -53,14 +57,10 @@ public class FeedingFrenzyMenu extends JFrame {
         mainPanel = new JPanel(cardLayout);
 
         mainPanel.add(createMainMenu(), "MAIN_MENU");
-        mainPanel.add(createDifficultySelection(), "DIFFICULTY_SELECT");
 
-        // إنشاء اللوحات القابلة للتحديث وتخزينها
+        // إنشاء اللوحات الأساسية
         playerSelectionPanel = createPlayerSelection();
         mainPanel.add(playerSelectionPanel, "PLAYER_SELECT");
-
-        gameScreenPanel = createGameScreen();
-        mainPanel.add(gameScreenPanel, "GAME_SCREEN");
 
         mainPanel.add(createOptionsScreen(), "OPTIONS_SCREEN");
 
@@ -81,7 +81,6 @@ public class FeedingFrenzyMenu extends JFrame {
             sharedBackground = ImageIO.read(new File("src/InterFace/sharedBackground.png"));
 
             try {
-                // الأبعاد الأصلية: 150, 150
                 newGameNormal = resizeImageIcon(new ImageIcon("src/InterFace/New Game 1.png"), 150, 150);
                 newGameHover = resizeImageIcon(new ImageIcon("src/InterFace/New Game 2.png"), 150, 150);
                 gameOptionsNormal = resizeImageIcon(new ImageIcon("src/InterFace/Game Options 1.png"), 150, 150);
@@ -90,22 +89,17 @@ public class FeedingFrenzyMenu extends JFrame {
                 exitHover = resizeImageIcon(new ImageIcon("src/InterFace/Exit 2.png"), 150, 150);
             } catch (Exception e) {
                 System.out.println("Warning: Button images not found. Using default text icons.");
-                createDefaultImages(); // يُنشئ الأيقونات النصية الافتراضية
+                createDefaultImages();
                 return;
             }
 
-            // أيقونات اختيار اللاعبين - تم تغييرها لاستخدام الصور الجديدة
             try {
-                // تحميل صور 1 Player
                 player1Normal = resizeImageIcon(new ImageIcon("src/InterFace/1 Player 1.png"), 150, 150);
                 player1Hover = resizeImageIcon(new ImageIcon("src/InterFace/1 Player 2.png"), 150, 150);
-
-                // تحميل صور 2 Players
                 player2Normal = resizeImageIcon(new ImageIcon("src/InterFace/Multi Player 1.png"), 150, 150);
                 player2Hover = resizeImageIcon(new ImageIcon("src/InterFace/Multi Player 2.png"), 150, 150);
             } catch (Exception e) {
                 System.out.println("Warning: Player images not found. Using default player icons.");
-                // في حالة عدم وجود الصور، نستخدم الأيقونات الافتراضية
                 player1Normal = createTextIcon("1 PLAYER", Color.CYAN, 150, 150);
                 player1Hover = createTextIcon("1 PLAYER", ACCENT_YELLOW, 150, 150);
                 player2Normal = createTextIcon("2 PLAYERS", Color.ORANGE, 150, 150);
@@ -132,7 +126,6 @@ public class FeedingFrenzyMenu extends JFrame {
         }
     }
 
-    // دالة مساعدة لتغيير حجم الأيقونة (بدون تغيير)
     private ImageIcon resizeImageIcon(ImageIcon icon, int width, int height) {
         if (icon.getImage() == null) return icon;
         Image img = icon.getImage();
@@ -140,7 +133,6 @@ public class FeedingFrenzyMenu extends JFrame {
         return new ImageIcon(resizedImg);
     }
 
-    // إنشاء الأيقونات النصية الافتراضية (بدون تغيير)
     private void createDefaultImages() {
         newGameNormal = createTextIcon("NEW GAME", Color.WHITE, 150, 50);
         newGameHover = createTextIcon("NEW GAME", ACCENT_YELLOW, 150, 50);
@@ -169,7 +161,6 @@ public class FeedingFrenzyMenu extends JFrame {
         hardAfter2 = createTextIcon("✓ HARD", Color.YELLOW, 120, 50);
     }
 
-    // دالة مساعدة لإنشاء أيقونة نصية (بدون تغيير)
     private ImageIcon createTextIcon(String text, Color color, int width, int height) {
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = img.createGraphics();
@@ -187,7 +178,6 @@ public class FeedingFrenzyMenu extends JFrame {
         return new ImageIcon(img);
     }
 
-    // دالة مساعدة لإنشاء أيقونة سمكة افتراضية (Fish Icon) (بدون تغيير)
     private ImageIcon createFishIcon(int width, int height) {
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = img.createGraphics();
@@ -208,7 +198,6 @@ public class FeedingFrenzyMenu extends JFrame {
         return new ImageIcon(img);
     }
 
-    // دالة مساعدة لإنشاء لوحة خلفية (بدون تغيير)
     private JPanel createBackgroundPanel(Image bgImage, Color defaultColor) {
         return new JPanel(new GridBagLayout()) {
             @Override
@@ -237,9 +226,8 @@ public class FeedingFrenzyMenu extends JFrame {
         iconLabel.setBorder(BorderFactory.createEmptyBorder(50, 0, 20, 0));
         panel.add(iconLabel, BorderLayout.NORTH);
 
-        // لوحة الأزرار في الجزء السفلي (أفقية)
         JPanel buttonContainer = new JPanel();
-        buttonContainer.setLayout(new FlowLayout(FlowLayout.CENTER, 30, 20)); // FlowLayout أفقي مع مسافة 30
+        buttonContainer.setLayout(new FlowLayout(FlowLayout.CENTER, 30, 20));
         buttonContainer.setOpaque(false);
 
         MenuButton btnNewGame = new MenuButton(newGameNormal, newGameHover, "NEW_GAME");
@@ -259,7 +247,6 @@ public class FeedingFrenzyMenu extends JFrame {
         return panel;
     }
 
-    // MenuButton (بدون تغيير)
     static class MenuButton extends JButton {
         private final ImageIcon normalIcon;
         private final ImageIcon hoverIcon;
@@ -286,24 +273,18 @@ public class FeedingFrenzyMenu extends JFrame {
     private void handleMainMenu(String command) {
         switch (command) {
             case "NEW_GAME":
-                difficulty = null; // نصفر الصعوبة
-                selectedDifficultyButton = null; // نصفر الزر المحدد
-                enableDifficultyNext(false);
-                // نعيد إنشاء لوحة اختيار الصعوبة من جديد
-                mainPanel.remove(playerSelectionPanel); // تأكد من إزالة أي لوحات
+                // إعادة ضبط جميع الاختيارات
+                difficulty = null;
+                selectedLevel = 1;
+                playerCount = 1;
+                selectedDifficultyButton = null;
+
+                // إعادة إنشاء لوحة اللاعبين
+                mainPanel.remove(playerSelectionPanel);
                 playerSelectionPanel = createPlayerSelection();
                 mainPanel.add(playerSelectionPanel, "PLAYER_SELECT");
 
-                // إنشاء لوحة اختيار الصعوبة جديدة
-                mainPanel.remove(mainPanel.getComponent(1)); // افترض أن index 1 هي DIFFICULTY_SELECT
-                mainPanel.add(createDifficultySelection(), "DIFFICULTY_SELECT");
-                cardLayout.show(mainPanel, "DIFFICULTY_SELECT");
-                break;
-
-            case "MAIN_MENU":
-                difficulty = null;
-                selectedDifficultyButton = null;
-                cardLayout.show(mainPanel, "MAIN_MENU");
+                cardLayout.show(mainPanel, "PLAYER_SELECT");
                 break;
 
             case "OPTIONS":
@@ -313,179 +294,35 @@ public class FeedingFrenzyMenu extends JFrame {
             case "EXIT":
                 exitGame();
                 break;
+
+            case "MAIN_MENU":
+                difficulty = null;
+                selectedLevel = 1;
+                selectedDifficultyButton = null;
+                cardLayout.show(mainPanel, "MAIN_MENU");
+                break;
         }
-    }
-
-
-    // =========================================================================
-    // 3. شاشة اختيار الصعوبة (DIFFICULTY_SELECT)
-    // =========================================================================
-
-    // DifficultyButton (بدون تغيير)
-    class DifficultyButton extends JButton {
-        private final String level;
-        private final ImageIcon before2, after1, after2;
-        private boolean selected = false;
-
-        public DifficultyButton(String level, ImageIcon before2, ImageIcon after1, ImageIcon after2) {
-            super(before2);
-            this.level = level;
-            this.before2 = before2;
-            this.after1 = after1;
-            this.after2 = after2;
-
-            setBorderPainted(false);
-            setContentAreaFilled(false);
-            setFocusPainted(false);
-            setOpaque(false);
-            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
-            addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    if (!selected) setIcon(after2); // لو مش متحدد فقط
-                }
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    setIcon(selected ? after1 : before2); // لو متحدد يبقى after1
-                }
-                @Override
-                public void mouseClicked(MouseEvent e) { selectButton(); }
-            });
-        }
-
-        public void selectButton() {
-            if (selectedDifficultyButton != null && selectedDifficultyButton != this)
-                selectedDifficultyButton.deselect();
-            selected = true;
-            selectedDifficultyButton = this;
-            difficulty = level; // تعيين مستوى الصعوبة
-            setIcon(after1); // تعرض الأيقونة المختارة فقط
-            enableDifficultyNext(true);
-        }
-
-        public void deselect() {
-            selected = false;
-            setIcon(before2);
-        }
-    }
-
-
-    // دالة للتحكم في تفعيل زر NEXT (بدون تغيير)
-    private void enableDifficultyNext(boolean enable) {
-        if (difficultyNextBtn != null) {
-            difficultyNextBtn.setEnabled(enable);
-            if (enable) {
-                difficultyNextBtn.setBackground(new Color(0, 180, 0));
-                difficultyNextBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            } else {
-                difficultyNextBtn.setBackground(Color.GRAY.darker());
-                difficultyNextBtn.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            }
-        }
-    }
-
-    private JPanel createDifficultySelection() {
-        JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
-        panel.setLayout(new BorderLayout());
-
-        JLabel titleLabel = new JLabel("S E L E C T   ~  D I F F I C U L T Y", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 36));
-        titleLabel.setForeground(ACCENT_YELLOW);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,150,0));
-        panel.add(titleLabel, BorderLayout.NORTH);
-
-        // استخدام FlowLayout لتنظيم الأزرار أفقياً
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 50));
-        buttonsPanel.setOpaque(false);
-
-        DifficultyButton btnEasy = new DifficultyButton("EASY", easyBefore2, easyAfter1, easyAfter2);
-        DifficultyButton btnMedium = new DifficultyButton("MEDIUM", mediumBefore2, mediumAfter1, mediumAfter2);
-        DifficultyButton btnHard = new DifficultyButton("HARD", hardBefore2, hardAfter1, hardAfter2);
-
-        // يتم التأكد من عدم تحديد أي زر إذا كان difficulty = null
-        if (difficulty != null) {
-            if ("EASY".equals(difficulty)) btnEasy.selectButton();
-            else if ("MEDIUM".equals(difficulty)) btnMedium.selectButton();
-            else if ("HARD".equals(difficulty)) btnHard.selectButton();
-        }
-
-        // لوحة لتجميع الزر والعنوان
-        buttonsPanel.add(createDifficultyButtonContainer("EASY", Color.GREEN, btnEasy));
-        buttonsPanel.add(createDifficultyButtonContainer("MEDIUM", Color.ORANGE, btnMedium));
-        buttonsPanel.add(createDifficultyButtonContainer("HARD", Color.RED, btnHard));
-
-        panel.add(buttonsPanel, BorderLayout.CENTER);
-
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
-        navPanel.setOpaque(false);
-
-        difficultyNextBtn = createStyledNavButton("NEXT →", new Color(0, 150, 0), e -> {
-            if (difficulty != null) {
-                // إزالة اللوحة القديمة وإعادة بناء لوحة اللاعبين بقيمة difficulty المُحدثة
-                mainPanel.remove(playerSelectionPanel);
-                playerSelectionPanel = createPlayerSelection();
-                mainPanel.add(playerSelectionPanel, "PLAYER_SELECT");
-
-                cardLayout.show(mainPanel, "PLAYER_SELECT");
-            }
-        });
-
-        enableDifficultyNext(difficulty != null);
-
-        JButton backBtn = createStyledNavButton("← BACK", new Color(100, 100, 200), e -> handleMainMenu("MAIN_MENU"));
-
-        navPanel.add(backBtn);
-        navPanel.add(difficultyNextBtn);
-
-        panel.add(navPanel, BorderLayout.SOUTH);
-
-        return panel;
-    }
-
-    // دالة مساعدة لإنشاء حاوية زر الصعوبة مع العنوان
-    private JPanel createDifficultyButtonContainer(String text, Color color, DifficultyButton button) {
-        JPanel container = new JPanel();
-        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-        container.setOpaque(false);
-        container.setPreferredSize(new Dimension(150, 150)); // لتحديد حجم مناسب
-
-        JLabel label = new JLabel(text, SwingConstants.CENTER);
-        label.setFont(new Font("Arial", Font.BOLD, 22));
-        label.setForeground(color);
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        container.add(label);
-        container.add(button);
-        return container;
     }
 
     // =========================================================================
-    // 4. شاشة اختيار اللاعبين (PLAYER_SELECT)
+    // 3. شاشة اختيار اللاعبين (PLAYER_SELECT)
     // =========================================================================
 
     private JPanel createPlayerSelection() {
         JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
         panel.setLayout(new BorderLayout());
 
-        // إظهار الصعوبة باللون الصحيح
-        String displayDifficulty = (difficulty != null) ? difficulty : "N/A";
-        JLabel difficultyLabel = new JLabel("D I F F I C U L T Y   ~   " + displayDifficulty, SwingConstants.CENTER);
-        difficultyLabel.setFont(new Font("Serif", Font.BOLD, 30));
-        difficultyLabel.setForeground(getDifficultyColor());
-        difficultyLabel.setBorder(BorderFactory.createEmptyBorder(50,0,80,0));
-        panel.add(difficultyLabel, BorderLayout.NORTH);
+        JLabel titleLabel = new JLabel("SELECT PLAYERS", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 36));
+        titleLabel.setForeground(ACCENT_YELLOW);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,100,0));
+        panel.add(titleLabel, BorderLayout.NORTH);
 
-        // لوحة لاعبين عمودية
         JPanel playersPanel = new JPanel();
         playersPanel.setLayout(new BoxLayout(playersPanel, BoxLayout.Y_AXIS));
         playersPanel.setOpaque(false);
         playersPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // زر اللاعب الواحد
         JButton btn1Player = new JButton(player1Normal);
         btn1Player.setBorderPainted(false);
         btn1Player.setContentAreaFilled(false);
@@ -509,7 +346,6 @@ public class FeedingFrenzyMenu extends JFrame {
             }
         });
 
-        // زر اللاعبين
         JButton btn2Players = new JButton(player2Normal);
         btn2Players.setBorderPainted(false);
         btn2Players.setContentAreaFilled(false);
@@ -533,35 +369,290 @@ public class FeedingFrenzyMenu extends JFrame {
             }
         });
 
-        // إضافة الأزرار عموديًا مع مسافة بينهم
         playersPanel.add(btn1Player);
-        playersPanel.add(Box.createRigidArea(new Dimension(0, 80))); // مسافة بين الأزرار
+        playersPanel.add(Box.createRigidArea(new Dimension(0, 80)));
         playersPanel.add(btn2Players);
 
         panel.add(playersPanel, BorderLayout.CENTER);
 
-        // زر BACK أسفل
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
         navPanel.setOpaque(false);
-        JButton backBtn = createStyledNavButton("← BACK", new Color(100, 100, 200), e -> cardLayout.show(mainPanel, "DIFFICULTY_SELECT"));
+        JButton backBtn = createStyledNavButton("← BACK", new Color(100, 100, 200),
+                e -> handleMainMenu("MAIN_MENU"));
         navPanel.add(backBtn);
         panel.add(navPanel, BorderLayout.SOUTH);
 
         return panel;
     }
 
+    // =========================================================================
+    // 4. شاشة اختيار المستوى (SELECT_LEVEL)
+    // =========================================================================
+
+    private void showLevelsAfterPlayerSelection() {
+        JPanel fullPanel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
+        fullPanel.setLayout(new BorderLayout());
+
+        JLabel titleLabel = new JLabel("SELECT LEVEL", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 40));
+        titleLabel.setForeground(ACCENT_YELLOW);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,50,0));
+        fullPanel.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel levelsPanel = new JPanel();
+        levelsPanel.setLayout(new BoxLayout(levelsPanel, BoxLayout.Y_AXIS));
+        levelsPanel.setOpaque(false);
+        levelsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JButton level1 = new JButton("LEVEL 1");
+        level1.setBackground(Color.decode("#4CAF50"));
+        level1.setForeground(Color.WHITE);
+        level1.setFont(new Font("Arial", Font.BOLD, 24));
+        level1.setFocusPainted(false);
+        level1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        level1.setMaximumSize(new Dimension(250, 80));
+        level1.addActionListener(e -> {
+            selectedLevel = 1;
+            showDifficultyForLevel(1);
+        });
+
+        JButton level2 = new JButton("LEVEL 2");
+        level2.setBackground(Color.decode("#FF9800"));
+        level2.setForeground(Color.WHITE);
+        level2.setFont(new Font("Arial", Font.BOLD, 24));
+        level2.setFocusPainted(false);
+        level2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        level2.setMaximumSize(new Dimension(250, 80));
+        level2.addActionListener(e -> {
+            selectedLevel = 2;
+            showDifficultyForLevel(2);
+        });
+
+        JButton level3 = new JButton("LEVEL 3");
+        level3.setBackground(Color.decode("#F44336"));
+        level3.setForeground(Color.WHITE);
+        level3.setFont(new Font("Arial", Font.BOLD, 24));
+        level3.setFocusPainted(false);
+        level3.setAlignmentX(Component.CENTER_ALIGNMENT);
+        level3.setMaximumSize(new Dimension(250, 80));
+        level3.addActionListener(e -> {
+            selectedLevel = 3;
+            showDifficultyForLevel(3);
+        });
+
+        levelsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        levelsPanel.add(level1);
+        levelsPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        levelsPanel.add(level2);
+        levelsPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        levelsPanel.add(level3);
+        levelsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        fullPanel.add(levelsPanel, BorderLayout.CENTER);
+
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
+        navPanel.setOpaque(false);
+        JButton backBtn = createStyledNavButton("← BACK", new Color(100, 100, 200),
+                e -> cardLayout.show(mainPanel, "PLAYER_SELECT"));
+        navPanel.add(backBtn);
+        fullPanel.add(navPanel, BorderLayout.SOUTH);
+
+        mainPanel.add(fullPanel, "SELECT_LEVEL");
+        cardLayout.show(mainPanel, "SELECT_LEVEL");
+    }
+
+    // =========================================================================
+    // 5. شاشة اختيار الصعوبة للمستوى (LEVEL_DIFFICULTY)
+    // =========================================================================
+
+    class DifficultyButton extends JButton {
+        private final QuizGLEventListener.Difficulty level;
+        private final ImageIcon before2, after1, after2;
+        private boolean selected = false;
+
+        public DifficultyButton(
+                QuizGLEventListener.Difficulty level,
+                ImageIcon before2,
+                ImageIcon after1,
+                ImageIcon after2
+        ) {
+            super(before2);
+            this.level = level;
+            this.before2 = before2;
+            this.after1 = after1;
+            this.after2 = after2;
+
+            setBorderPainted(false);
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setOpaque(false);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    if (!selected) setIcon(after2);
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    setIcon(selected ? after1 : before2);
+                }
+                @Override
+                public void mouseClicked(MouseEvent e) { selectButton(); }
+            });
+        }
+
+        public void selectButton() {
+            if (selectedDifficultyButton != null && selectedDifficultyButton != this)
+                selectedDifficultyButton.deselect();
+            selected = true;
+            selectedDifficultyButton = this;
+            difficulty = level;
+            setIcon(after1);
+        }
+
+        public void deselect() {
+            selected = false;
+            setIcon(before2);
+        }
+    }
+
+    private void showDifficultyForLevel(int level) {
+        JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
+        panel.setLayout(new BorderLayout());
+
+        JLabel titleLabel = new JLabel("LEVEL " + level + " - SELECT DIFFICULTY", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 32));
+        titleLabel.setForeground(ACCENT_YELLOW);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,100,0));
+        panel.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 50));
+        buttonsPanel.setOpaque(false);
+
+        DifficultyButton btnEasy = new DifficultyButton(QuizGLEventListener.Difficulty.EASY,
+                easyBefore2, easyAfter1, easyAfter2);
+
+        DifficultyButton btnMedium = new DifficultyButton(QuizGLEventListener.Difficulty.MEDIUM,
+                mediumBefore2, mediumAfter1, mediumAfter2);
+
+        DifficultyButton btnHard = new DifficultyButton(QuizGLEventListener.Difficulty.HARD,
+                hardBefore2, hardAfter1, hardAfter2);
+
+        // إعادة ضبط الاختيار
+        btnEasy.deselect();
+        btnMedium.deselect();
+        btnHard.deselect();
+        selectedDifficultyButton = null;
+        difficulty = null;
+
+        buttonsPanel.add(createDifficultyButtonContainer("EASY", Color.GREEN, btnEasy));
+        buttonsPanel.add(createDifficultyButtonContainer("MEDIUM", Color.ORANGE, btnMedium));
+        buttonsPanel.add(createDifficultyButtonContainer("HARD", Color.RED, btnHard));
+
+        panel.add(buttonsPanel, BorderLayout.CENTER);
+
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
+        navPanel.setOpaque(false);
+
+        JButton backBtn = createStyledNavButton("← BACK", new Color(100, 100, 200),
+                e -> cardLayout.show(mainPanel, "SELECT_LEVEL"));
+
+        JButton startBtn = createStyledNavButton("START GAME →", new Color(0, 150, 0), e -> {
+            if (difficulty != null) {
+                startGameWithLevelAndDifficulty(level, difficulty);
+            }
+        });
+
+        startBtn.setEnabled(false);
+        startBtn.setBackground(Color.GRAY.darker());
+
+        // تحديث حالة زر البدء عند اختيار الصعوبة
+        ActionListener difficultySelectListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startBtn.setEnabled(true);
+                startBtn.setBackground(new Color(0, 150, 0));
+            }
+        };
+
+        btnEasy.addActionListener(difficultySelectListener);
+        btnMedium.addActionListener(difficultySelectListener);
+        btnHard.addActionListener(difficultySelectListener);
+
+        navPanel.add(backBtn);
+        navPanel.add(startBtn);
+        panel.add(navPanel, BorderLayout.SOUTH);
+
+        mainPanel.add(panel, "LEVEL_DIFFICULTY_" + level);
+        cardLayout.show(mainPanel, "LEVEL_DIFFICULTY_" + level);
+    }
+
+    private JPanel createDifficultyButtonContainer(String text, Color color, DifficultyButton button) {
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setOpaque(false);
+        container.setPreferredSize(new Dimension(150, 150));
+
+        JLabel label = new JLabel(text, SwingConstants.CENTER);
+        label.setFont(new Font("Arial", Font.BOLD, 22));
+        label.setForeground(color);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        container.add(label);
+        container.add(button);
+        return container;
+    }
+
+    // =========================================================================
+    // 6. بدء اللعبة
+    // =========================================================================
+
+    private void startGameWithLevelAndDifficulty(int level, QuizGLEventListener.Difficulty difficulty) {
+        dispose();
+
+        QuizGLEventListener listener = new QuizGLEventListener(difficulty);
+        listener.setPlayerCount(playerCount);
+        listener.setLevel(level);
+        listener.setDifficulty(difficulty);
+
+        JFrame gameFrame = new JFrame("Feeding Frenzy - Level " + level + " - " + difficulty);
+        GLCanvas canvas = new GLCanvas();
+        canvas.addGLEventListener(listener);
+        canvas.addKeyListener(listener);
+        canvas.addMouseMotionListener(listener);
+        canvas.setFocusable(true);
+
+        gameFrame.getContentPane().add(canvas, BorderLayout.CENTER);
+
+        FPSAnimator animator = new FPSAnimator(canvas, 15, true);
+        animator.start();
+
+        gameFrame.setSize(1000, 1000);
+        gameFrame.setLocationRelativeTo(null);
+        gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        gameFrame.setVisible(true);
+
+        SwingUtilities.invokeLater(() -> canvas.requestFocusInWindow());
+    }
+
+    // =========================================================================
+    // 7. الدوال المساعدة
+    // =========================================================================
 
     private Color getDifficultyColor() {
         if (difficulty == null) return Color.WHITE;
         switch (difficulty) {
-            case "EASY": return Color.GREEN;
-            case "MEDIUM": return Color.ORANGE;
-            case "HARD": return Color.RED;
+            case EASY: return Color.GREEN;
+            case MEDIUM: return Color.ORANGE;
+            case HARD: return Color.RED;
             default: return Color.WHITE;
         }
     }
 
-    // دالة لإنشاء زر تنقل موحد الشكل (بدون تغيير)
     private JButton createStyledNavButton(String text, Color bgColor, ActionListener listener) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 18));
@@ -577,45 +668,12 @@ public class FeedingFrenzyMenu extends JFrame {
             public void mouseEntered(MouseEvent e) {
                 if (button.isEnabled()) button.setBackground(bgColor.brighter());
             }
-
             @Override
             public void mouseExited(MouseEvent e) {
                 if (button.isEnabled()) button.setBackground(bgColor);
             }
         });
         return button;
-    }
-
-    // =========================================================================
-    // 5. شاشة اللعب والخيارات (GAME_SCREEN, OPTIONS_SCREEN)
-    // =========================================================================
-
-    private JPanel createGameScreen() {
-        JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
-        panel.setLayout(null);
-
-        JLabel gameLabel = new JLabel("GAME IN PROGRESS...", SwingConstants.CENTER);
-        gameLabel.setFont(new Font("Arial", Font.BOLD, 40));
-        gameLabel.setForeground(Color.WHITE);
-        gameLabel.setBounds(200, 300, 400, 50);
-        panel.add(gameLabel);
-
-        // إضافة معلومات اللعبة
-        JLabel infoLabel = new JLabel("Players: " + playerCount + " | Difficulty: " + (difficulty != null ? difficulty : "Not Set"), SwingConstants.CENTER);
-        infoLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        infoLabel.setForeground(ACCENT_YELLOW);
-        infoLabel.setBounds(200, 370, 400, 30);
-        panel.add(infoLabel);
-
-        JButton pauseBtn = new JButton("PAUSE");
-        pauseBtn.setFont(new Font("Arial", Font.BOLD, 14));
-        pauseBtn.setBackground(new Color(255, 165, 0));
-        pauseBtn.setForeground(Color.WHITE);
-        pauseBtn.setBounds(650, 20, 100, 35);
-        pauseBtn.addActionListener(e -> showPauseMenu());
-        panel.add(pauseBtn);
-
-        return panel;
     }
 
     private JPanel createOptionsScreen() {
@@ -633,7 +691,6 @@ public class FeedingFrenzyMenu extends JFrame {
         contentPanel.add(titleLabel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 50)));
 
-        // خيارات وهمية
         JLabel opt1 = new JLabel("Sound Volume: 80%");
         opt1.setForeground(Color.WHITE); opt1.setFont(new Font("Arial", Font.PLAIN, 18));
         opt1.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -646,24 +703,13 @@ public class FeedingFrenzyMenu extends JFrame {
         contentPanel.add(opt2);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 50)));
 
-        // تغيير شكل زر العودة هنا
-        JButton backBtn = createStyledNavButton("← BACK TO MAIN MENU", PRIMARY_BLUE.darker(), e -> handleMainMenu("MAIN_MENU"));
+        JButton backBtn = createStyledNavButton("← BACK TO MAIN MENU", PRIMARY_BLUE.darker(),
+                e -> handleMainMenu("MAIN_MENU"));
         backBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(backBtn);
 
         panel.add(contentPanel);
         return panel;
-    }
-
-    private void startGame() {
-        System.out.println("Starting game with " + playerCount + " player(s), Difficulty: " + difficulty);
-
-        // إزالة وإعادة إضافة لوحة اللعبة لضمان تحديث محتواها
-        mainPanel.remove(gameScreenPanel);
-        gameScreenPanel = createGameScreen();
-        mainPanel.add(gameScreenPanel, "GAME_SCREEN");
-
-        cardLayout.show(mainPanel, "GAME_SCREEN");
     }
 
     private void exitGame() {
@@ -677,137 +723,6 @@ public class FeedingFrenzyMenu extends JFrame {
             System.exit(0);
         }
     }
-
-    // شاشة الإيقاف المؤقت (Pause Menu)
-    private void showPauseMenu() {
-        JDialog pauseDialog = new JDialog(this, "Paused", true);
-        pauseDialog.setUndecorated(true);
-        pauseDialog.setBackground(new Color(0, 0, 0, 180));
-        pauseDialog.setSize(350, 400);
-        pauseDialog.setLocationRelativeTo(this);
-
-        JPanel menuPanel = new JPanel();
-        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
-        menuPanel.setOpaque(false);
-        menuPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
-
-        JLabel title = new JLabel("GAME PAUSED", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 32));
-        title.setForeground(ACCENT_YELLOW);
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuPanel.add(title);
-        menuPanel.add(Box.createRigidArea(new Dimension(0, 40)));
-
-        JButton resumeBtn = createStyledNavButton("RESUME", new Color(0, 150, 0), e -> {
-            pauseDialog.dispose();
-        });
-        resumeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuPanel.add(resumeBtn);
-        menuPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-
-        JButton optionsBtn = createStyledNavButton("OPTIONS", PRIMARY_BLUE.darker(), e -> {
-            pauseDialog.dispose();
-            cardLayout.show(mainPanel, "OPTIONS_SCREEN");
-        });
-        optionsBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuPanel.add(optionsBtn);
-        menuPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-
-        JButton menuBtn = createStyledNavButton("MAIN MENU", new Color(100, 100, 200), e -> {
-            pauseDialog.dispose();
-            // 🌟 التعديل: تصفير الصعوبة عند العودة إلى القائمة الرئيسية من الإيقاف المؤقت
-            difficulty = null;
-            selectedDifficultyButton = null;
-            cardLayout.show(mainPanel, "MAIN_MENU");
-        });
-        menuBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuPanel.add(menuBtn);
-        menuPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-
-        JButton exitBtn = createStyledNavButton("EXIT GAME", Color.RED.darker(), e -> exitGame());
-        exitBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuPanel.add(exitBtn);
-
-        pauseDialog.setContentPane(menuPanel);
-        pauseDialog.setVisible(true);
-    }
-    private DifficultyButton selectedLevelButton = null; // لتخزين المستوى المختار
-
-    private void showLevelsAfterPlayerSelection() {
-        JPanel fullPanel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
-        fullPanel.setLayout(new BorderLayout());
-
-        // عنوان Levels
-        JLabel titleLabel = new JLabel("L  E  V  E  L  S", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 40));
-        titleLabel.setForeground(ACCENT_YELLOW);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,70,0));
-        fullPanel.add(titleLabel, BorderLayout.NORTH);
-
-        // لوحة المربعات رأسياً
-        JPanel levelsPanel = new JPanel();
-        levelsPanel.setLayout(new BoxLayout(levelsPanel, BoxLayout.Y_AXIS));
-        levelsPanel.setOpaque(false);
-        levelsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JButton level1 = new JButton("LEVEL 1");
-        level1.setBackground(Color.GREEN);
-        level1.setForeground(Color.WHITE);
-        level1.setFont(new Font("Arial", Font.BOLD, 24));
-        level1.setFocusPainted(false);
-        level1.setAlignmentX(Component.CENTER_ALIGNMENT);
-        level1.setMaximumSize(new Dimension(200, 120));
-        level1.addActionListener(e -> {
-            difficulty = "EASY";
-            startGame();
-        });
-
-        JButton level2 = new JButton("LEVEL 2");
-        level2.setBackground(Color.ORANGE);
-        level2.setForeground(Color.WHITE);
-        level2.setFont(new Font("Arial", Font.BOLD, 24));
-        level2.setFocusPainted(false);
-        level2.setAlignmentX(Component.CENTER_ALIGNMENT);
-        level2.setMaximumSize(new Dimension(200, 120));
-        level2.addActionListener(e -> {
-            difficulty = "MEDIUM";
-            startGame();
-        });
-
-        JButton level3 = new JButton("LEVEL 3");
-        level3.setBackground(Color.RED);
-        level3.setForeground(Color.WHITE);
-        level3.setFont(new Font("Arial", Font.BOLD, 24));
-        level3.setFocusPainted(false);
-        level3.setAlignmentX(Component.CENTER_ALIGNMENT);
-        level3.setMaximumSize(new Dimension(200, 120));
-        level3.addActionListener(e -> {
-            difficulty = "HARD";
-            startGame();
-        });
-
-        // إضافة المربعات إلى اللوحة مع مسافات
-        levelsPanel.add(level1);
-        levelsPanel.add(Box.createRigidArea(new Dimension(0, 30)));
-        levelsPanel.add(level2);
-        levelsPanel.add(Box.createRigidArea(new Dimension(0, 30)));
-        levelsPanel.add(level3);
-
-        fullPanel.add(levelsPanel, BorderLayout.CENTER);
-
-        // زر BACK فقط
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
-        navPanel.setOpaque(false);
-        JButton backBtn = createStyledNavButton("← BACK", new Color(100, 100, 200),
-                e -> cardLayout.show(mainPanel, "PLAYER_SELECT"));
-        navPanel.add(backBtn);
-        fullPanel.add(navPanel, BorderLayout.SOUTH);
-
-        mainPanel.add(fullPanel, "PLAYER_LEVELS");
-        cardLayout.show(mainPanel, "PLAYER_LEVELS");
-    }
-
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(FeedingFrenzyMenu::new);
