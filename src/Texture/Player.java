@@ -1,4 +1,4 @@
-package InterFace;
+package Texture;
 
 public class Player {
     private final int id;

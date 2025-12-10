@@ -1,4 +1,4 @@
-    package InterFace;
+    package Texture;
 
     import javax.imageio.ImageIO;
     import javax.swing.*;
