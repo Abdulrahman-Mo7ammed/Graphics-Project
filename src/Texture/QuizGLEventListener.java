@@ -14,6 +14,7 @@ import java.util.List;
 public class QuizGLEventListener extends AnimListener {
 
     // إضافة ثوابت للأيقونات
+    int incEnymies=0;
     private static final int P_ICON_INDEX = 29; // P.png
     private static final int R_ICON_INDEX = 30; // R.png
     private static final int HEART_ICON_INDEX = 25; // heart1.png
@@ -53,7 +54,6 @@ public class QuizGLEventListener extends AnimListener {
         fish1.setSoundCallback(fishSoundCallback);
         fish1.setScoreCallback(() -> {
             if (!gameOver && !gamePaused) {
-                fish1.score += 10;
                 checkWinCondition();
             }
         });
@@ -67,7 +67,6 @@ public class QuizGLEventListener extends AnimListener {
             fish2.setSoundCallback(fishSoundCallback);
             fish2.setScoreCallback(() -> {
                 if (!gameOver && !gamePaused) {
-                    fish2.score += 10;
                     checkWinCondition();
                 }
             });
@@ -105,10 +104,10 @@ public class QuizGLEventListener extends AnimListener {
     private Difficulty currentDifficulty;
     private int currentBackgroundTextureIndex;
 
-    int spawnDelay = 20;
-    int spawnCounter = 20;
+    int spawnDelay = 10;
+    int spawnCounter = 10;
 
-    int scoreToWin = 100;
+    int scoreToWin = 1000;
     boolean gameOver = false;
     boolean gamePaused = false;
     boolean showMenu = false;
@@ -142,7 +141,7 @@ public class QuizGLEventListener extends AnimListener {
         @Override
         public void playEatSound() {
             audioManager.playSound("eat");
-            audioManager.playSound("bubble");
+//            audioManager.playSound("bubble");
         }
 
         @Override
@@ -249,6 +248,12 @@ public class QuizGLEventListener extends AnimListener {
         GL gl = gld.getGL();
         gl.glClear(GL.GL_COLOR_BUFFER_BIT);
         gl.glLoadIdentity();
+        incEnymies++;
+        if (incEnymies==1000){
+            spawnDelay--;
+            incEnymies=0;
+            if (spawnDelay==5) incEnymies=1001;
+        }
 
         drawBackground(gl);
 
@@ -272,8 +277,7 @@ public class QuizGLEventListener extends AnimListener {
     }
 
     private void updateGame(GL gl) {
-        spawnCounter--;
-        if (spawnCounter <= 0) {
+        if (spawnCounter == spawnDelay) {
             boolean startFromRight = Math.random() > 0.5;
             double startX = startFromRight ? maxWidth : -maxWidth;
             double startY = (Math.random() * (maxHeight * 2)) - maxHeight;
@@ -281,8 +285,9 @@ public class QuizGLEventListener extends AnimListener {
             FishType randomType = FishType.getRandomType();
             monsters.add(new Enemy(startX, startY, randomType));
 
-            spawnCounter = spawnDelay;
+            spawnCounter = 0;
         }
+        spawnCounter++;
 
         for (int i = 0; i < monsters.size(); i++) {
             Enemy e = monsters.get(i);
@@ -314,7 +319,7 @@ public class QuizGLEventListener extends AnimListener {
         if (!gameOver && !showWinScreen) {
             for (int i = 0; i < fishes.size(); i++) {
                 Fish f = fishes.get(i);
-                if (f.score >= scoreToWin) {
+                if (f.score >= 500) {
                     gameOver = true;
                     showWinScreen = true;
                     winner = i + 1;
@@ -412,9 +417,9 @@ public class QuizGLEventListener extends AnimListener {
         // معلومات اللاعب الأول (أعلى اليسار)
         if (fishes.size() > 0) {
             Fish fish1 = fishes.get(0);
-            gl.glColor3f(0.0f, 0.7f, 1.0f); // أزرق فاتح
+            gl.glColor3f(1.0f, 1f, 1.0f);
             gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
-            String p1Text = "P1: " + fish1.score + " / " + scoreToWin;
+            String p1Text = "P1: " + fish1.score + " / " + 1000;
             for (char c : p1Text.toCharArray())
                 glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c);
 
@@ -427,9 +432,9 @@ public class QuizGLEventListener extends AnimListener {
         // معلومات اللاعب الثاني (أعلى اليمين)
         if (playerCount == 2 && fishes.size() > 1) {
             Fish fish2 = fishes.get(1);
-            gl.glColor3f(1.0f, 0.5f, 0.0f); // برتقالي
+            gl.glColor3f(1.0f, 1f, 1f);
             gl.glRasterPos2f(maxWidth - 180, maxHeight - 20);
-            String p2Text = "P2: " + fish2.score + " / " + scoreToWin;
+            String p2Text = "P2: " + fish2.score + " / " + 1000;
             for (char c : p2Text.toCharArray())
                 glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c);
 
@@ -848,19 +853,16 @@ public class QuizGLEventListener extends AnimListener {
                 this.spawnDelay = 30;
                 this.enemySpeedMultiplier = 1;
                 this.initialLives = 3;
-                this.scoreToWin = 100;
                 break;
             case MEDIUM:
                 this.spawnDelay = 20;
                 this.enemySpeedMultiplier = 1.85;
                 this.initialLives = 3;
-                this.scoreToWin = 150;
                 break;
             case HARD:
                 this.spawnDelay = 10;
                 this.enemySpeedMultiplier = 2.5;
                 this.initialLives = 3;
-                this.scoreToWin = 200;
                 break;
         }
 

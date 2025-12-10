@@ -3,7 +3,7 @@ package Texture;
 public enum FishType {
 
 
-    SMALL_FISH(3, new int[]{}, 0.4f, 3.0f, 100),
+    SMALL_FISH(3, new int[]{}, 0.4f, 3.0f, 200),
 
     LEMON_FISH(8, new int[]{9, 10, 11, 12}, 0.6f, 5.0f, 60),
     GREEN_FISH(4, new int[]{5, 6, 7}, 0.8f, 5.0f, 50),

@@ -79,7 +79,7 @@ public class Fish {
         boolean u = keys.get(UP);
         boolean d = keys.get(DOWN);
 
-        int speed = 5; // سرعة ثابتة
+        int speed = 6; // سرعة ثابتة
 
         if (l && u) {
             move(-speed, speed, maxW, maxH);
@@ -166,22 +166,22 @@ public class Fish {
                     // زيادة الحجم حسب نوع السمكة المأكولة
                     switch (enemy.type){
                         case SMALL_FISH:
-                            scale += 0.04;
+                            scale += 0.04;score+=10;
                             break;
                         case GREEN_FISH:
-                            scale += 0.05;
+                            scale += 0.05;score+=20;
                             break;
                         case LEMON_FISH:
-                            scale += 0.06;
+                            scale += 0.06;score+=15;
                             break;
                         case YELLOW_FISH:
-                            scale += 0.07;
+                            scale += 0.07;score+=30;
                             break;
                         case SHARK:
-                            scale += 0.08;
+                            scale += 0.08;score+=40;
                             break;
                         case WHALE:
-                            scale += 0.09;
+                            scale += 0.09;score+=50;
                             break;
                     }
 
@@ -196,7 +196,7 @@ public class Fish {
                     // أصوات الأكل والنمو
                     if (soundCallback != null) {
                         soundCallback.playEatSound();
-                        soundCallback.playGrowthSound();
+                     //   soundCallback.playGrowthSound();
                     }
                 } else {
                     // العدو يأكل السمكة
