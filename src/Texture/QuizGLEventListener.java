@@ -1,6 +1,7 @@
 package Texture;
 
 import com.sun.opengl.util.GLUT;
+import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,16 @@ import java.util.List;
 
 public class QuizGLEventListener extends AnimListener {
 
+    // إضافة ثوابت للأيقونات
+    private static final int P_ICON_INDEX = 29; // P.png
+    private static final int R_ICON_INDEX = 30; // R.png
+    private static final int HEART_ICON_INDEX = 25; // heart1.png
+    private static final int BACKGROUND_LEVEL1_INDEX = 26;
+    private static final int BACKGROUND_LEVEL2_INDEX = 27;
+    private static final int BACKGROUND_LEVEL3_INDEX = 28;
+
+    private boolean menuIconState = false; // false = P, true = R
+
     public QuizGLEventListener(Difficulty difficulty) {
         this.currentDifficulty = difficulty;
     }
@@ -19,9 +30,9 @@ public class QuizGLEventListener extends AnimListener {
     public void setLevel(int level) {
         currentLevel = level;
         switch(level) {
-            case 1: currentBackgroundTextureIndex = textureNames.length - 3; break;
-            case 2: currentBackgroundTextureIndex = textureNames.length - 2; break;
-            case 3: currentBackgroundTextureIndex = textureNames.length - 1; break;
+            case 1: currentBackgroundTextureIndex = BACKGROUND_LEVEL1_INDEX; break;
+            case 2: currentBackgroundTextureIndex = BACKGROUND_LEVEL2_INDEX; break;
+            case 3: currentBackgroundTextureIndex = BACKGROUND_LEVEL3_INDEX; break;
         }
         setDifficulty(currentDifficulty);
     }
@@ -30,13 +41,13 @@ public class QuizGLEventListener extends AnimListener {
         setLevel(level);
         setDifficulty(difficulty);
     }
-    // في QuizGLEventListener.java - تعديل دالة setPlayerCount
+
     public void setPlayerCount(int players) {
         fishes.clear();
         this.playerCount = players;
 
-        // اللاعب الأول (دائماً موجود) - تحسين الموقع
-        Fish fish1 = new Fish(100, 0, // تغيير الموقع ليبدأ من اليسار
+        // اللاعب الأول - التحكم بالسهام
+        Fish fish1 = new Fish(100, 0,
                 KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
                 KeyEvent.VK_UP, KeyEvent.VK_DOWN);
         fish1.setSoundCallback(fishSoundCallback);
@@ -48,9 +59,9 @@ public class QuizGLEventListener extends AnimListener {
         });
         fishes.add(fish1);
 
-        // اللاعب الثاني (إذا كان اللعبة ثنائية)
+        // اللاعب الثاني - التحكم بـ WASD
         if (players == 2) {
-            Fish fish2 = new Fish(-100, 0, // موقع مختلف للاعب الثاني
+            Fish fish2 = new Fish(-100, 0,
                     KeyEvent.VK_A, KeyEvent.VK_D,
                     KeyEvent.VK_W, KeyEvent.VK_S);
             fish2.setSoundCallback(fishSoundCallback);
@@ -63,10 +74,10 @@ public class QuizGLEventListener extends AnimListener {
             fishes.add(fish2);
         }
 
-        // تعيين الحياة الابتدائية حسب الصعوبة
+        // تعيين القيم الابتدائية
         for (Fish f : fishes) {
             f.Heart = this.initialLives;
-            f.x = 0; // إعادة التعيين لوسط الشاشة
+            f.x = 0;
             f.y = 0;
             f.scale = 0.45;
             f.isAlive = true;
@@ -114,19 +125,14 @@ public class QuizGLEventListener extends AnimListener {
             "Yellow_fish.png", "Yellow_eat1.png", "Yellow_eat2.png", "Yellow_eat3.png",
             "Whale.png", "Whale_eat1.png", "Whale_eat2.png", "Whale_eat3.png",
             "Shark.png", "Shark_eat1.png", "Shark_eat2.png", "Shark_eat3.png","heart1.png",
-            "background Level 1.png" , "background Level 2.png" , "background Level 3.png",
-            "flag_icon.png" // أضف أيقونة العلم هنا
+            "background Level 1.png", "background Level 2.png", "background Level 3.png",
+            "P.png", "R.png"
     };
 
     TextureReader.Texture[] texture = new TextureReader.Texture[textureNames.length];
     int[] textures = new int[textureNames.length];
 
     BitSet keyBits = new BitSet(256);
-
-    // إحداثيات زر العلم
-    private int flagX = 280; // على اليمين
-    private int flagY = 180; // في الأعلى
-    private int flagSize = 20; // حجم الزر
 
     public enum Difficulty {
         EASY, MEDIUM, HARD
@@ -252,7 +258,7 @@ public class QuizGLEventListener extends AnimListener {
 
         drawScoreAndInfo(gl);
         drawLives(gl);
-        drawFlagButton(gl); // رسم زر العلم
+        drawMenuIcon(gl);
 
         if (gameOver && showGameOverScreen) {
             drawGameOverScreen(gl);
@@ -346,29 +352,33 @@ public class QuizGLEventListener extends AnimListener {
         gl.glLoadIdentity();
 
         gl.glEnable(GL.GL_BLEND);
-        int heartIndex = textures.length - 5;
-        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[heartIndex]);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[HEART_ICON_INDEX]);
 
+        // عرض القلوب أعلى الشاشة على اليسار لكل لاعب
         for (int i = 0; i < fishes.size(); i++) {
             Fish f = fishes.get(i);
             for (int j = 0; j < f.Heart; j++) {
                 gl.glPushMatrix();
 
                 double x, y;
-                double spacing = 35;
+                double spacing = 25;
+                double heartWidth = 15;
+                double heartHeight = 12;
 
-                if (i == 1) {
-                    x = -maxWidth + 30 + (j * spacing);
-                    y = maxHeight - 120;
-                } else {
-                    x = maxWidth - 30 - (j * spacing);
-                    y = maxHeight - 120;
+                // اللاعب الأول: أعلى اليسار
+                if (i == 0) {
+                    x = -maxWidth + 20 + (j * spacing);
+                    y = maxHeight - 40;
+                }
+                // اللاعب الثاني: أعلى اليمين
+                else {
+                    x = maxWidth - 40 - (j * spacing);
+                    y = maxHeight - 40;
                 }
 
                 gl.glTranslated(x, y, 0);
-                double heartWidth = 20;
-                double heartHeight = 15;
 
+                // رسم القلب داخل دائرة
                 gl.glBegin(GL.GL_QUADS);
                 gl.glTexCoord2f(0, 0); gl.glVertex2d(-heartWidth, -heartHeight);
                 gl.glTexCoord2f(1, 0); gl.glVertex2d(heartWidth, -heartHeight);
@@ -386,6 +396,7 @@ public class QuizGLEventListener extends AnimListener {
         gl.glMatrixMode(GL.GL_MODELVIEW);
         gl.glPopMatrix();
     }
+
     public void drawScoreAndInfo(GL gl) {
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPushMatrix();
@@ -401,46 +412,38 @@ public class QuizGLEventListener extends AnimListener {
         // معلومات اللاعب الأول (أعلى اليسار)
         if (fishes.size() > 0) {
             Fish fish1 = fishes.get(0);
-            gl.glColor3f(0.2f, 0.8f, 1.0f); // لون أزرق للاعب 1
+            gl.glColor3f(0.0f, 0.7f, 1.0f); // أزرق فاتح
             gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
             String p1Text = "P1: " + fish1.score + " / " + scoreToWin;
             for (char c : p1Text.toCharArray())
-                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
-
-            // عرض مفاتيح التحكم للاعب 1
-            gl.glRasterPos2f(-maxWidth + 20, maxHeight - 45);
-            String p1Keys = "Controls: ←↑→↓";
-            for (char c : p1Keys.toCharArray())
                 glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c);
+
+            gl.glRasterPos2f(-maxWidth + 20, maxHeight - 35);
+            String p1Controls = "Controls: ARROW KEYS";
+            for (char c : p1Controls.toCharArray())
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_10, c);
         }
 
         // معلومات اللاعب الثاني (أعلى اليمين)
         if (playerCount == 2 && fishes.size() > 1) {
             Fish fish2 = fishes.get(1);
-            gl.glColor3f(1.0f, 0.6f, 0.2f); // لون برتقالي للاعب 2
+            gl.glColor3f(1.0f, 0.5f, 0.0f); // برتقالي
             gl.glRasterPos2f(maxWidth - 180, maxHeight - 20);
             String p2Text = "P2: " + fish2.score + " / " + scoreToWin;
             for (char c : p2Text.toCharArray())
-                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
-
-            // عرض مفاتيح التحكم للاعب 2
-            gl.glRasterPos2f(maxWidth - 180, maxHeight - 45);
-            String p2Keys = "Controls: WASD";
-            for (char c : p2Keys.toCharArray())
                 glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c);
+
+            gl.glRasterPos2f(maxWidth - 180, maxHeight - 35);
+            String p2Controls = "Controls: WASD";
+            for (char c : p2Controls.toCharArray())
+                glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_10, c);
         }
 
-        // High Score في المنتصف
-        gl.glColor3f(1.0f, 1.0f, 1.0f);
-        gl.glRasterPos2f(-80, maxHeight - 20);
-        String highText = "High Score: " + highScore;
-        for (char c : highText.toCharArray())
-            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
-
-        // Level & Difficulty
-        gl.glRasterPos2f(-maxWidth + 20, maxHeight - 70);
-        String levelText = "Level: " + currentLevel + " | " + currentDifficulty;
-        for (char c : levelText.toCharArray())
+        // المعلومات العامة في المنتصف
+        gl.glColor3f(1.0f, 1.0f, 0.5f);
+        gl.glRasterPos2f(-50, maxHeight - 20);
+        String info = "Level " + currentLevel + " | " + currentDifficulty;
+        for (char c : info.toCharArray())
             glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_12, c);
 
         gl.glEnable(GL.GL_TEXTURE_2D);
@@ -449,7 +452,10 @@ public class QuizGLEventListener extends AnimListener {
         gl.glPopMatrix();
         gl.glMatrixMode(GL.GL_MODELVIEW);
     }
-    private void drawFlagButton(GL gl) {
+
+    private void drawMenuIcon(GL gl) {
+        if (gameOver || showWinScreen || showGameOverScreen) return;
+
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glPushMatrix();
         gl.glLoadIdentity();
@@ -462,33 +468,43 @@ public class QuizGLEventListener extends AnimListener {
         gl.glEnable(GL.GL_BLEND);
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
-        // استخدام أيقونة العلم (آخر عنصر في المصفوفة)
-        int flagIndex = textures.length - 1;
-        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[flagIndex]);
+        // اختيار الأيقونة بناءً على حالة القائمة
+        int iconIndex = menuIconState ? R_ICON_INDEX : P_ICON_INDEX;
+        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[iconIndex]);
 
         gl.glPushMatrix();
-        gl.glTranslated(maxWidth - flagSize - 20, maxHeight - flagSize - 20, 0);
+        // وضع الأيقونة في الزاوية اليمنى العليا
+        gl.glTranslated(maxWidth - 30, maxHeight - 30, 0);
 
-        // رسم خلفية للزر
-        if (!gameOver && !showWinScreen && !showGameOverScreen && !showMenu) {
-            gl.glDisable(GL.GL_TEXTURE_2D);
-            gl.glColor4f(0.2f, 0.4f, 0.8f, 0.7f);
-            gl.glBegin(GL.GL_QUADS);
-            gl.glVertex2d(-flagSize - 5, -flagSize - 5);
-            gl.glVertex2d(flagSize + 5, -flagSize - 5);
-            gl.glVertex2d(flagSize + 5, flagSize + 5);
-            gl.glVertex2d(-flagSize - 5, flagSize + 5);
-            gl.glEnd();
-            gl.glEnable(GL.GL_TEXTURE_2D);
+        // رسم خلفية دائرية للأيقونة
+        gl.glDisable(GL.GL_TEXTURE_2D);
+        if (showMenu) {
+            gl.glColor4f(0.2f, 0.4f, 0.8f, 0.8f); // أزرق عند فتح القائمة
+        } else {
+            gl.glColor4f(0.8f, 0.2f, 0.2f, 0.8f); // أحمر عند إغلاقها
         }
 
-        // رسم أيقونة العلم
+        // رسم دائرة
+        gl.glBegin(GL.GL_TRIANGLE_FAN);
+        gl.glVertex2d(0, 0); // مركز الدائرة
+        int segments = 32;
+        double radius = 15;
+        for (int i = 0; i <= segments; i++) {
+            double angle = 2.0 * Math.PI * i / segments;
+            gl.glVertex2d(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        }
+        gl.glEnd();
+
+        gl.glEnable(GL.GL_TEXTURE_2D);
         gl.glColor3f(1.0f, 1.0f, 1.0f);
+
+        // رسم الأيقونة بداخل الدائرة
+        double iconSize = 12;
         gl.glBegin(GL.GL_QUADS);
-        gl.glTexCoord2f(0, 0); gl.glVertex2d(-flagSize, -flagSize);
-        gl.glTexCoord2f(1, 0); gl.glVertex2d(flagSize, -flagSize);
-        gl.glTexCoord2f(1, 1); gl.glVertex2d(flagSize, flagSize);
-        gl.glTexCoord2f(0, 1); gl.glVertex2d(-flagSize, flagSize);
+        gl.glTexCoord2f(0, 0); gl.glVertex2d(-iconSize, -iconSize);
+        gl.glTexCoord2f(1, 0); gl.glVertex2d(iconSize, -iconSize);
+        gl.glTexCoord2f(1, 1); gl.glVertex2d(iconSize, iconSize);
+        gl.glTexCoord2f(0, 1); gl.glVertex2d(-iconSize, iconSize);
         gl.glEnd();
 
         gl.glPopMatrix();
@@ -731,9 +747,9 @@ public class QuizGLEventListener extends AnimListener {
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
         gl.glColor4f(0, 0.2f, 0.4f, 0.95f);
         gl.glBegin(GL.GL_QUADS);
-        gl.glVertex2f(-maxWidth, maxHeight - 200);  // تبدأ من الأعلى
+        gl.glVertex2f(-maxWidth, maxHeight - 200);
         gl.glVertex2f(maxWidth, maxHeight - 200);
-        gl.glVertex2f(maxWidth, maxHeight);         // حتى حافة الشاشة
+        gl.glVertex2f(maxWidth, maxHeight);
         gl.glVertex2f(-maxWidth, maxHeight);
         gl.glEnd();
 
@@ -848,18 +864,6 @@ public class QuizGLEventListener extends AnimListener {
                 break;
         }
 
-        switch(currentLevel) {
-            case 1:
-                this.currentBackgroundTextureIndex = textureNames.length - 4;
-                break;
-            case 2:
-                this.currentBackgroundTextureIndex = textureNames.length - 3;
-                break;
-            case 3:
-                this.currentBackgroundTextureIndex = textureNames.length - 2;
-                break;
-        }
-
         for (Fish f : fishes) {
             f.Heart = this.initialLives;
         }
@@ -869,20 +873,86 @@ public class QuizGLEventListener extends AnimListener {
         int mouseX = e.getX();
         int mouseY = e.getY();
 
-        // تحويل إحداثيات الماوس إلى إحداثيات اللعبة
-        int windowWidth = 600; // عرض النافذة
-        int windowHeight = 600; // ارتفاع النافذة
+        // تحويل إحداثيات النافذة إلى إحداثيات اللعبة
+        int windowWidth = 1000;
+        int windowHeight = 1000;
 
         double gameX = (mouseX - windowWidth/2.0) * (maxWidth * 2.0) / windowWidth;
         double gameY = (windowHeight/2.0 - mouseY) * (maxHeight * 2.0) / windowHeight;
 
-        // التحقق إذا تم النقر على زر العلم
-        if (!gameOver && !showWinScreen && !showGameOverScreen && !showMenu) {
-            if (Math.abs(gameX - (maxWidth - flagSize - 10)) < flagSize &&
-                    Math.abs(gameY - (maxHeight - flagSize - 10)) < flagSize) {
-                showMenu = true;
-                gamePaused = true;
+        // التحقق من النقر على أيقونة القائمة (P/R)
+        if (!gameOver && !showWinScreen && !showGameOverScreen) {
+            double iconX = maxWidth - 30;
+            double iconY = maxHeight - 30;
+            double iconRadius = 15;
+
+            double distX = gameX - iconX;
+            double distY = gameY - iconY;
+            double distance = Math.sqrt(distX * distX + distY * distY);
+
+            if (distance <= iconRadius) {
+                // تبديل حالة القائمة
+                showMenu = !showMenu;
+                gamePaused = showMenu;
+                menuIconState = showMenu;
+                return;
             }
+        }
+
+        // إذا كانت القائمة مفتوحة، التحقق من النقر على الخيارات
+        if (showMenu) {
+            float startX = -maxWidth + 50;
+            float spacing = 150;
+            float menuY = maxHeight - 100;
+
+            // خيارات القائمة
+            String[] menuOptions = {"Resume", "Level", "Difficulty", "Players", "Restart", "Main Menu", "Exit"};
+
+            for (int i = 0; i < menuOptions.length; i++) {
+                float optionX = startX + (i * spacing);
+
+                // تقريباً عرض كل خيار 140 بكسل، ارتفاع 20 بكسل
+                if (gameX >= optionX && gameX <= optionX + 140 &&
+                        gameY >= menuY - 10 && gameY <= menuY + 10) {
+
+                    handleMenuSelection(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void handleMenuSelection(int option) {
+        switch (option) {
+            case 0: // Resume
+                showMenu = false;
+                gamePaused = false;
+                menuIconState = false; // P
+                break;
+            case 1: // Change Level
+                changeLevel();
+                showMenu = false;
+                gamePaused = false;
+                menuIconState = false;
+                break;
+            case 2: // Change Difficulty
+                changeDifficulty();
+                showMenu = false;
+                gamePaused = false;
+                menuIconState = false;
+                break;
+            case 3: // Toggle Players
+                togglePlayers();
+                break;
+            case 4: // Restart
+                restartGame();
+                break;
+            case 5: // Main Menu
+                returnToMainMenu();
+                break;
+            case 6: // Exit
+                System.exit(0);
+                break;
         }
     }
 
@@ -953,20 +1023,24 @@ public class QuizGLEventListener extends AnimListener {
         switch (keyCode) {
             case KeyEvent.VK_1:
             case KeyEvent.VK_P:
+            case KeyEvent.VK_ESCAPE:
                 showMenu = false;
                 gamePaused = false;
+                menuIconState = false;
                 break;
             case KeyEvent.VK_2:
             case KeyEvent.VK_L:
                 changeLevel();
                 showMenu = false;
                 gamePaused = false;
+                menuIconState = false;
                 break;
             case KeyEvent.VK_3:
             case KeyEvent.VK_D:
                 changeDifficulty();
                 showMenu = false;
                 gamePaused = false;
+                menuIconState = false;
                 break;
             case KeyEvent.VK_4:
                 togglePlayers();
@@ -980,7 +1054,6 @@ public class QuizGLEventListener extends AnimListener {
                 returnToMainMenu();
                 break;
             case KeyEvent.VK_7:
-            case KeyEvent.VK_ESCAPE:
                 System.exit(0);
                 break;
         }
@@ -990,14 +1063,10 @@ public class QuizGLEventListener extends AnimListener {
         switch (keyCode) {
             case KeyEvent.VK_P:
             case KeyEvent.VK_ESCAPE:
-                gamePaused = !gamePaused;
-                if (!gamePaused) {
-                    showMenu = false;
-                }
-                break;
             case KeyEvent.VK_M:
-                showMenu = true;
-                gamePaused = true;
+                showMenu = !showMenu;
+                gamePaused = showMenu;
+                menuIconState = showMenu;
                 break;
             case KeyEvent.VK_L:
                 changeLevel();

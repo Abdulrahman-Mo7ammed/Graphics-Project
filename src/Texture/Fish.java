@@ -12,7 +12,7 @@ public class Fish {
         void playGrowthSound();
         void playCollisionSound();
         void playGameOverSound();
-        void playWinSound(); // تم إضافة هذا
+        void playWinSound();
     }
 
     private SoundCallback soundCallback;
@@ -79,50 +79,52 @@ public class Fish {
         boolean u = keys.get(UP);
         boolean d = keys.get(DOWN);
 
+        int speed = 5; // سرعة ثابتة
+
         if (l && u) {
-            move(-5, 5, maxW, maxH);
-            dir=5;
-            reflection=1;
+            move(-speed, speed, maxW, maxH);
+            dir = 5;
+            reflection = 1;
             animationIndex++;
         }
         else if (r && u) {
-            move(5, 5, maxW, maxH);
-            dir=4;
-            reflection=-1;
+            move(speed, speed, maxW, maxH);
+            dir = 4;
+            reflection = -1;
             animationIndex++;
         }
         else if (l && d) {
-            move(-5,-5, maxW, maxH);
-            dir=7;
-            reflection=1;
+            move(-speed, -speed, maxW, maxH);
+            dir = 7;
+            reflection = 1;
             animationIndex++;
         }
         else if (r && d) {
-            move(5,-5, maxW, maxH);
-            dir=6;
-            reflection=-1;
+            move(speed, -speed, maxW, maxH);
+            dir = 6;
+            reflection = -1;
             animationIndex++;
         }
         else if (l) {
-            move(-5, 0, maxW, maxH);
-            dir=3;
-            reflection=1;
+            move(-speed, 0, maxW, maxH);
+            dir = 3;
+            reflection = 1;
             animationIndex++;
         }
         else if (r) {
-            move(5, 0, maxW, maxH);
-            dir=1;
-            reflection=-1;
+            move(speed, 0, maxW, maxH);
+            dir = 1;
+            reflection = -1;
             animationIndex++;
         }
         else if (u) {
-            move(0, 5, maxW, maxH);
-            dir=0;
+            move(0, speed, maxW, maxH);
+            dir = 0;
             animationIndex++;
         }
         else if (d) {
-            move(0,-5, maxW, maxH);
-            dir=2;
+            move(0, -speed, maxW, maxH);
+            dir = 2;
             animationIndex++;
         }
 
