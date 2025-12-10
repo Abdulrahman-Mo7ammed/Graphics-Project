@@ -304,77 +304,53 @@ public class FeedingFrenzyMenu extends JFrame {
         }
     }
 
-    // =========================================================================
-    // 3. شاشة اختيار اللاعبين (PLAYER_SELECT)
-    // =========================================================================
+
+// =========================================================================
+// 3. شاشة اختيار اللاعبين (PLAYER_SELECT) - محسنة
+// =========================================================================
 
     private JPanel createPlayerSelection() {
         JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
         panel.setLayout(new BorderLayout());
 
-        JLabel titleLabel = new JLabel("SELECT PLAYERS", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 36));
+        JLabel titleLabel = new JLabel("SELECT NUMBER OF PLAYERS", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
         titleLabel.setForeground(ACCENT_YELLOW);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,100,0));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(50,0,50,0));
         panel.add(titleLabel, BorderLayout.NORTH);
 
-        JPanel playersPanel = new JPanel();
-        playersPanel.setLayout(new BoxLayout(playersPanel, BoxLayout.Y_AXIS));
+        JPanel playersPanel = new JPanel(new GridBagLayout());
         playersPanel.setOpaque(false);
-        playersPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 0, 10, 0);
 
-        JButton btn1Player = new JButton(player1Normal);
-        btn1Player.setBorderPainted(false);
-        btn1Player.setContentAreaFilled(false);
-        btn1Player.setFocusPainted(false);
-        btn1Player.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn1Player.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // زر اللاعب الواحد
+        JButton btn1Player = createPlayerButton("SINGLE PLAYER",
+                "Challenge yourself in single player mode",
+                player1Normal, player1Hover);
         btn1Player.addActionListener(e -> {
             playerCount = 1;
             showLevelsAfterPlayerSelection();
         });
-        btn1Player.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                btn1Player.setIcon(player1Hover);
-                btn1Player.setBorder(BorderFactory.createLineBorder(Color.CYAN, 3));
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                btn1Player.setIcon(player1Normal);
-                btn1Player.setBorder(BorderFactory.createEmptyBorder());
-            }
-        });
 
-        JButton btn2Players = new JButton(player2Normal);
-        btn2Players.setBorderPainted(false);
-        btn2Players.setContentAreaFilled(false);
-        btn2Players.setFocusPainted(false);
-        btn2Players.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn2Players.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // زر اللاعبين
+        JButton btn2Players = createPlayerButton("MULTI PLAYER",
+                "Play with a friend in cooperative mode",
+                player2Normal, player2Hover);
         btn2Players.addActionListener(e -> {
             playerCount = 2;
             showLevelsAfterPlayerSelection();
         });
-        btn2Players.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                btn2Players.setIcon(player2Hover);
-                btn2Players.setBorder(BorderFactory.createLineBorder(Color.MAGENTA, 3));
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                btn2Players.setIcon(player2Normal);
-                btn2Players.setBorder(BorderFactory.createEmptyBorder());
-            }
-        });
 
-        playersPanel.add(btn1Player);
-        playersPanel.add(Box.createRigidArea(new Dimension(0, 80)));
-        playersPanel.add(btn2Players);
+        playersPanel.add(btn1Player, gbc);
+        playersPanel.add(Box.createRigidArea(new Dimension(0, 30)), gbc);
+        playersPanel.add(btn2Players, gbc);
 
         panel.add(playersPanel, BorderLayout.CENTER);
 
+        // لوحة التنقل
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
         navPanel.setOpaque(false);
         JButton backBtn = createStyledNavButton("← BACK", new Color(100, 100, 200),
@@ -383,6 +359,87 @@ public class FeedingFrenzyMenu extends JFrame {
         panel.add(navPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    private JButton createPlayerButton(String title, String description,
+                                       ImageIcon normalIcon, ImageIcon hoverIcon) {
+        JPanel buttonPanel = new JPanel(new BorderLayout(10, 5));
+        buttonPanel.setOpaque(false);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        buttonPanel.setBackground(new Color(0, 0, 0, 100));
+
+        JLabel iconLabel = new JLabel(normalIcon);
+        iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setForeground(Color.WHITE);
+
+        JLabel descLabel = new JLabel(description);
+        descLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        descLabel.setForeground(Color.LIGHT_GRAY);
+
+        JPanel textPanel = new JPanel(new BorderLayout());
+        textPanel.setOpaque(false);
+        textPanel.add(titleLabel, BorderLayout.NORTH);
+        textPanel.add(descLabel, BorderLayout.SOUTH);
+
+        buttonPanel.add(iconLabel, BorderLayout.WEST);
+        buttonPanel.add(textPanel, BorderLayout.CENTER);
+
+        // تحويل اللوحة إلى زر
+        JButton button = new JButton() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                // رسم خلفية شفافة
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(0, 0, 0, 100));
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                g2d.dispose();
+                super.paintComponent(g);
+            }
+        };
+
+        button.setLayout(new BorderLayout());
+        button.add(buttonPanel);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        // تأثيرات التمرير
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                iconLabel.setIcon(hoverIcon);
+                buttonPanel.setBackground(new Color(255, 255, 255, 50));
+                buttonPanel.setBorder(BorderFactory.createLineBorder(ACCENT_YELLOW, 2, true));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                iconLabel.setIcon(normalIcon);
+                buttonPanel.setBackground(new Color(0, 0, 0, 100));
+                buttonPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                buttonPanel.setBackground(new Color(255, 200, 0, 100));
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (button.getMousePosition() != null) {
+                    buttonPanel.setBackground(new Color(255, 255, 255, 50));
+                } else {
+                    buttonPanel.setBackground(new Color(0, 0, 0, 100));
+                }
+            }
+        });
+
+        return button;
     }
 
     // =========================================================================
@@ -722,6 +779,25 @@ public class FeedingFrenzyMenu extends JFrame {
         if (confirm == JOptionPane.YES_OPTION) {
             System.exit(0);
         }
+    }
+
+
+    // إنشاء أيقونة العلم الافتراضية
+    private ImageIcon createFlagIcon(int width, int height) {
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = img.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // رسم علم
+        g2d.setColor(Color.RED);
+        g2d.fillRect(10, 5, 20, 10);
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(10, 15, 20, 10);
+        g2d.setColor(Color.BLACK);
+        g2d.fillRect(8, 5, 2, 25);
+
+        g2d.dispose();
+        return new ImageIcon(img);
     }
 
     public static void main(String[] args) {
