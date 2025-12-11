@@ -318,8 +318,6 @@ public class QuizGLEventListener extends AnimListener {
                 saveHighScore();
             }
         }
-        // في دالة updateGame، في نهاية الدالة
-        System.out.println("Monsters Count: " + monsters.size());
         checkWinCondition();
     }
 
