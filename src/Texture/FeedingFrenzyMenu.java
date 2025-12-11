@@ -296,17 +296,13 @@ public class FeedingFrenzyMenu extends JFrame {
             });
         }
     }
-
     private void handleMainMenu(String command) {
         switch (command) {
             case "NEW_GAME":
-                difficulty = null;
-                playerCount = 1;
-                selectedDifficultyButton = null;
-                mainPanel.remove(playerSelectionPanel);
-                playerSelectionPanel = createPlayerSelection();
-                mainPanel.add(playerSelectionPanel, "PLAYER_SELECT");
-                cardLayout.show(mainPanel, "PLAYER_SELECT");
+                playButtonClickSound();
+                playerCount = 1; // افتراض 1 player مباشر
+                difficulty = FeedingFrenzy.Difficulty.EASY; // افتراض مستوى سهل
+                startGameWithLevelAndDifficulty(1, difficulty); // يبدأ اللعبة مباشرة
                 break;
             case "OPTIONS":
                 cardLayout.show(mainPanel, "OPTIONS_SCREEN");
@@ -320,6 +316,7 @@ public class FeedingFrenzyMenu extends JFrame {
                 break;
         }
     }
+
 
     private JPanel createPlayerSelection() {
         JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
@@ -585,9 +582,21 @@ public class FeedingFrenzyMenu extends JFrame {
         });
         return button;
     }
-
     private JPanel createOptionsScreen() {
         JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setOpaque(false);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(80, 50, 50, 50));
+
+        // عنوان الصفحة
+        JLabel titleLabel = new JLabel("GAME OPTIONS", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
+        titleLabel.setForeground(ACCENT_YELLOW);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contentPanel.add(titleLabel);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+
+        // صوت
         JPanel soundControlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         soundControlPanel.setOpaque(false);
         JLabel soundLabel = new JLabel("🔊 Sound: ");
@@ -595,23 +604,42 @@ public class FeedingFrenzyMenu extends JFrame {
         soundLabel.setFont(new Font("Arial", Font.BOLD, 20));
         soundControlPanel.add(soundLabel);
 
-        JToggleButton soundToggle = new JToggleButton("ON", true);
+        JToggleButton soundToggle = new JToggleButton("ON", true) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                if (isSelected()) {
+                    g2d.setColor(new Color(0, 200, 0)); // أخضر ON
+                } else {
+                    g2d.setColor(Color.RED); // OFF
+                }
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(getFont());
+                FontMetrics fm = g2d.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
+                g2d.drawString(getText(), x, y);
+                g2d.dispose();
+            }
+        };
         soundToggle.setFont(new Font("Arial", Font.BOLD, 16));
-        soundToggle.setForeground(Color.WHITE);
-        soundToggle.setBackground(new Color(0, 150, 0));
+        soundToggle.setFocusPainted(false);
+        soundToggle.setOpaque(false);
+        soundToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         soundToggle.addActionListener(e -> {
             playButtonClickSound();
             boolean enabled = soundToggle.isSelected();
             soundToggle.setText(enabled ? "ON" : "OFF");
-            soundToggle.setBackground(enabled ? new Color(0, 150, 0) : Color.RED);
             if (audioManager != null) audioManager.toggleMute();
         });
         soundControlPanel.add(soundToggle);
         contentPanel.add(soundControlPanel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
+        // مستوى الصوت
         JPanel volumePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        volumePanel.setOpaque(false);
+        volumePanel.setOpaque(false); // شيل الخلفية البيضاء
         JLabel volumeLabel = new JLabel("📢 Volume: ");
         volumeLabel.setForeground(Color.WHITE);
         volumeLabel.setFont(new Font("Arial", Font.BOLD, 20));
@@ -619,8 +647,27 @@ public class FeedingFrenzyMenu extends JFrame {
 
         JSlider volumeSlider = new JSlider(0, 100, 70);
         volumeSlider.setPreferredSize(new Dimension(200, 40));
-        volumeSlider.setPaintTicks(true);
-        volumeSlider.setPaintLabels(true);
+        volumeSlider.setPaintTicks(false);
+        volumeSlider.setPaintLabels(false);
+
+        // تعديل شكل شريط الصوت
+        volumeSlider.setUI(new javax.swing.plaf.basic.BasicSliderUI(volumeSlider) {
+            @Override
+            public void paintTrack(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setColor(new Color(200, 200, 200));
+                g2d.fillRoundRect(trackRect.x, trackRect.y + trackRect.height / 2 - 5, trackRect.width, 10, 5, 5);
+                g2d.dispose();
+            }
+            @Override
+            public void paintThumb(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setColor(new Color(0, 200, 0));
+                g2d.fillOval(thumbRect.x, thumbRect.y, thumbRect.width, thumbRect.height);
+                g2d.dispose();
+            }
+        });
+
         volumeSlider.addChangeListener(e -> {
             if (!volumeSlider.getValueIsAdjusting() && audioManager != null) {
                 float volume = volumeSlider.getValue() / 100.0f;
@@ -632,30 +679,63 @@ public class FeedingFrenzyMenu extends JFrame {
         contentPanel.add(volumePanel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setOpaque(false);
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(80, 50, 50, 50));
+        // زرار HOW TO PLAY بلون خلفية مختلف
+        JButton howToPlayBtn = createStyledNavButton("HOW TO PLAY", new Color(255, 140, 0), e -> {
+            playButtonClickSound();
+            showHowToPlay();
+        });
+        howToPlayBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contentPanel.add(howToPlayBtn);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 50))); // زيادة المسافة
 
-        JLabel titleLabel = new JLabel("GAME OPTIONS", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
-        titleLabel.setForeground(ACCENT_YELLOW);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        contentPanel.add(titleLabel);
-        contentPanel.add(Box.createRigidArea(new Dimension(0, 50)));
-
-        JButton backBtn = createStyledNavButton("← BACK TO MAIN MENU", PRIMARY_BLUE.darker(), e -> handleMainMenu("MAIN_MENU"));
+        // زرار BACK TO MAIN MENU تحت شويه
+        JButton backBtn = createStyledNavButton("← BACK TO MAIN MENU", PRIMARY_BLUE.darker(),
+                e -> handleMainMenu("MAIN_MENU"));
         backBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(backBtn);
 
+        // الخلفية
+        JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
         panel.add(contentPanel);
         return panel;
     }
+
+    private void showHowToPlay() {
+        JPanel howToPlayPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                try {
+                    ImageIcon icon = new ImageIcon("src/InterFace/how to play.png");
+                    Image img = icon.getImage();
+                    g.drawImage(img, 0, 0, getWidth(), getHeight(), this);
+                } catch (Exception e) {
+                    g.setColor(new Color(0, 50, 100));
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            }
+        };
+        howToPlayPanel.setOpaque(true);
+
+        // زرار BACK في الأسفل
+        JButton backBtn = createStyledNavButton("← BACK", PRIMARY_BLUE.darker(),
+                e -> cardLayout.show(mainPanel, "OPTIONS_SCREEN"));
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
+        navPanel.setOpaque(false);
+        navPanel.add(backBtn);
+
+        howToPlayPanel.add(navPanel, BorderLayout.SOUTH);
+
+        mainPanel.add(howToPlayPanel, "HOW_TO_PLAY");
+        cardLayout.show(mainPanel, "HOW_TO_PLAY");
+    }
+
 
     private void exitGame() {
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to exit?", "Exit Game", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (confirm == JOptionPane.YES_OPTION) System.exit(0);
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(FeedingFrenzyMenu::new);

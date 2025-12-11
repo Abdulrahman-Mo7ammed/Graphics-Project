@@ -689,4 +689,13 @@ public class FeedingFrenzy extends AnimListener {
     public void displayChanged(GLAutoDrawable d, boolean m, boolean d2) {}
     public void mouseDragged(MouseEvent e) {}
     public void mouseMoved(MouseEvent e) {}
+
+    private String player1Name = "Player1";
+    private String player2Name = "Player2";
+
+    public void setPlayerNames(String p1, String p2) {
+        this.player1Name = p1;
+        this.player2Name = p2;
+    }
+
 }
