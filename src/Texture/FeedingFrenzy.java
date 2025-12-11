@@ -1,5 +1,6 @@
 package Texture;
 
+import com.sun.opengl.util.FPSAnimator;
 import com.sun.opengl.util.GLUT;
 import java.awt.event.*;
 import java.io.File;
@@ -9,6 +10,8 @@ import javax.media.opengl.glu.GLU;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import javax.swing.*;
+import java.awt.*;
 
 public class FeedingFrenzy extends AnimListener {
 
@@ -18,12 +21,20 @@ public class FeedingFrenzy extends AnimListener {
     private static final int BACKGROUND_LEVEL2_INDEX = 27;
     private static final int BACKGROUND_LEVEL3_INDEX = 28;
 
+    private JFrame gameFrame;
+    private FPSAnimator animator;
+    private FeedingFrenzyMenu mainMenu;
+    private JDialog pauseDialog;
+    private JDialog endScreenDialog;
+    private boolean menuOpen = false;
+
     public void setAudioManager(AudioManager audioManager) {
         this.audioManager = audioManager;
     }
 
-    public FeedingFrenzy(Difficulty difficulty) {
+    public FeedingFrenzy(Difficulty difficulty, FeedingFrenzyMenu menu) {
         this.currentDifficulty = difficulty;
+        this.mainMenu = menu;
     }
 
     public void setLevel(int level) {
@@ -34,6 +45,9 @@ public class FeedingFrenzy extends AnimListener {
         setLevel(level);
         setDifficulty(difficulty);
     }
+
+    public void setGameFrame(JFrame frame) { this.gameFrame = frame; }
+    public void setAnimator(FPSAnimator anim) { this.animator = anim; }
 
     public void setPlayerCount(int players) {
         fishes.clear();
@@ -138,6 +152,11 @@ public class FeedingFrenzy extends AnimListener {
         }
     };
 
+    private void playButtonClickSound() {
+        if (audioManager != null) audioManager.playButtonClick();
+    }
+
+
     public void init(GLAutoDrawable gld) {
         setDifficulty(currentDifficulty);
         GL gl = gld.getGL();
@@ -146,22 +165,6 @@ public class FeedingFrenzy extends AnimListener {
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
         gl.glGenTextures(textureNames.length, textures, 0);
-
-        File soundsFolder = new File(SOUNDS_PATH);
-        if (!soundsFolder.exists()) {
-            System.err.println("ERROR: Sounds folder not found!");
-        }
-
-        audioManager = new AudioManager();
-        String[] sounds = {"background .wav", "Bubbles.wav", "collision.wav", "fish eats.wav", "fish growth.wav", "game-over.wav", "zapsplat_cartoon.wav"};
-        String[] soundNames = {"background", "bubble", "collision", "eat", "growth", "gameover", "zap"};
-
-        for (int i = 0; i < sounds.length; i++) {
-            String fullPath = SOUNDS_PATH + sounds[i];
-            if (new File(fullPath).exists()) {
-                audioManager.loadSound(soundNames[i], fullPath);
-            }
-        }
 
         try {
             audioManager.playBackgroundMusic("background");
@@ -195,20 +198,52 @@ public class FeedingFrenzy extends AnimListener {
 
         drawBackground(gl);
 
-        if (!gamePaused && !showWinScreen && !showGameOverScreen) {
+        if (!gamePaused && !showWinScreen && !showGameOverScreen && !menuOpen) {
             updateGame(gl);
         }
 
         drawScoreAndInfo(gl);
         drawLives(gl);
 
-        if (gameOver && showGameOverScreen) {
-            drawGameOverScreen(gl);
-        } else if (showWinScreen) {
-            drawWinScreen(gl);
-        } else if (gamePaused) {
-            drawPauseText(gl);
+        if (gamePaused || menuOpen || showWinScreen || showGameOverScreen) {
+            drawPauseOverlay(gl);
         }
+    }
+
+    private void drawPauseOverlay(GL gl) {
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+        glu.gluOrtho2D(-maxWidth, maxWidth, -maxHeight, maxHeight);
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+
+        gl.glDisable(GL.GL_TEXTURE_2D);
+        gl.glEnable(GL.GL_BLEND);
+        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+        gl.glColor4f(0, 0, 0, 0.6f);
+        gl.glBegin(GL.GL_QUADS);
+        gl.glVertex2f(-maxWidth, -maxHeight);
+        gl.glVertex2f(maxWidth, -maxHeight);
+        gl.glVertex2f(maxWidth, maxHeight);
+        gl.glVertex2f(-maxWidth, maxHeight);
+        gl.glEnd();
+
+        if (gamePaused && !menuOpen && !showWinScreen && !showGameOverScreen) {
+            gl.glColor3f(1.0f, 1.0f, 1.0f);
+            gl.glRasterPos2f(-40, 0);
+            String pauseText = "PAUSED";
+            for (char c : pauseText.toCharArray())
+                glut.glutBitmapCharacter(GLUT.BITMAP_TIMES_ROMAN_24, c);
+        }
+
+        gl.glDisable(GL.GL_BLEND);
+        gl.glEnable(GL.GL_TEXTURE_2D);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL.GL_MODELVIEW);
     }
 
     private void updateGame(GL gl) {
@@ -271,6 +306,7 @@ public class FeedingFrenzy extends AnimListener {
                     winner = winnerIndex;
                     fishSoundCallback.playWinSound();
                     audioManager.stopBackgroundMusic();
+                    showEndScreen(true);
                     return;
                 }
             }
@@ -283,6 +319,7 @@ public class FeedingFrenzy extends AnimListener {
                     winner = i + 1;
                     fishSoundCallback.playWinSound();
                     audioManager.stopBackgroundMusic();
+                    showEndScreen(true);
                     return;
                 }
             }
@@ -299,6 +336,7 @@ public class FeedingFrenzy extends AnimListener {
                 gameOver = true;
                 showGameOverScreen = true;
                 fishSoundCallback.playGameOverSound();
+                showEndScreen(false);
             }
         }
     }
@@ -406,186 +444,80 @@ public class FeedingFrenzy extends AnimListener {
         gl.glDisable(GL.GL_BLEND);
     }
 
-    private void drawWinScreen(GL gl) {
-        gl.glMatrixMode(GL.GL_PROJECTION);
-        gl.glPushMatrix();
-        gl.glLoadIdentity();
-        glu.gluOrtho2D(-maxWidth, maxWidth, -maxHeight, maxHeight);
-        gl.glMatrixMode(GL.GL_MODELVIEW);
-        gl.glPushMatrix();
-        gl.glLoadIdentity();
+    private void showEndScreen(boolean isWin) {
+        if (animator.isAnimating()) animator.stop();
 
-        gl.glDisable(GL.GL_TEXTURE_2D);
+        String titleText = isWin ? "VICTORY!" : "GAME OVER";
+        Color titleColor = isWin ? Color.YELLOW : new Color(255, 100, 100);
+        Color bgColor = isWin ? new Color(0, 50, 100, 230) : new Color(100, 0, 0, 230);
+        String actionText = isWin ? "PLAY AGAIN" : "RETRY";
+        Color actionColor = isWin ? new Color(0, 150, 0) : new Color(150, 150, 0);
 
-        gl.glEnable(GL.GL_BLEND);
-        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glColor4f(0.1f, 0.1f, 0.2f, 0.95f);
-        gl.glBegin(GL.GL_QUADS);
-        gl.glVertex2f(-200, -180);
-        gl.glVertex2f(200, -180);
-        gl.glVertex2f(200, 180);
-        gl.glVertex2f(-200, 180);
-        gl.glEnd();
-
-        gl.glLineWidth(4);
-        gl.glColor3f(1.0f, 0.84f, 0.0f);
-        gl.glBegin(GL.GL_LINE_LOOP);
-        gl.glVertex2f(-190, -170);
-        gl.glVertex2f(190, -170);
-        gl.glVertex2f(190, 170);
-        gl.glVertex2f(-190, 170);
-        gl.glEnd();
-
-        gl.glColor3f(1.0f, 1.0f, 0.0f);
-        gl.glPushMatrix();
-
-        gl.glTranslated(0, 50, 0);
-        float scale = 0.45f;
-        gl.glScalef(scale, scale, 1.0f);
-
-        String winText = "VICTORY!";
-        float textWidth = glut.glutStrokeLength(GLUT.STROKE_ROMAN, winText);
-        gl.glTranslated(-textWidth / 2.0f, 0, 0);
-
-        for (char c : winText.toCharArray())
-            glut.glutStrokeCharacter(GLUT.STROKE_ROMAN, c);
-
-        gl.glPopMatrix();
-
-        gl.glColor3f(1.0f, 1.0f, 1.0f);
-        String winnerText;
+        String scoreDetail;
         if (playerCount == 1) {
-            winnerText = "Final Score: " + fishes.get(0).score;
+            scoreDetail = "Final Score: " + fishes.get(0).score;
+        } else if (isWin) {
+            scoreDetail = "Winner: Player " + winner;
         } else {
-            winnerText = "Winner: Player " + winner;
-        }
-
-        gl.glRasterPos2f(-60, -20);
-        for (char c : winnerText.toCharArray())
-            glut.glutBitmapCharacter(GLUT.BITMAP_TIMES_ROMAN_24, c);
-
-        gl.glColor3f(1.0f, 1.0f, 1.0f);
-        gl.glRasterPos2f(-90, -120);
-        String instructions = "[R] Play Again    [ESC] Exit";
-        for (char c : instructions.toCharArray())
-            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
-
-        gl.glDisable(GL.GL_BLEND);
-        gl.glEnable(GL.GL_TEXTURE_2D);
-        gl.glPopMatrix();
-        gl.glMatrixMode(GL.GL_PROJECTION);
-        gl.glPopMatrix();
-        gl.glMatrixMode(GL.GL_MODELVIEW);
-    }
-
-    private void drawGameOverScreen(GL gl) {
-        gl.glMatrixMode(GL.GL_PROJECTION);
-        gl.glPushMatrix();
-        gl.glLoadIdentity();
-        glu.gluOrtho2D(-maxWidth, maxWidth, -maxHeight, maxHeight);
-
-        gl.glMatrixMode(GL.GL_MODELVIEW);
-        gl.glPushMatrix();
-        gl.glLoadIdentity();
-
-        gl.glDisable(GL.GL_TEXTURE_2D);
-
-        gl.glEnable(GL.GL_BLEND);
-        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glColor4f(0.3f, 0.0f, 0.0f, 0.95f);
-
-        gl.glBegin(GL.GL_QUADS);
-        gl.glVertex2f(-200, -180);
-        gl.glVertex2f(200, -180);
-        gl.glVertex2f(200, 180);
-        gl.glVertex2f(-200, 180);
-        gl.glEnd();
-
-        gl.glLineWidth(4);
-        gl.glColor3f(1.0f, 0.0f, 0.0f);
-        gl.glBegin(GL.GL_LINE_LOOP);
-        gl.glVertex2f(-190, -170);
-        gl.glVertex2f(190, -170);
-        gl.glVertex2f(190, 170);
-        gl.glVertex2f(-190, 170);
-        gl.glEnd();
-
-        gl.glColor3f(1.0f, 0.2f, 0.2f);
-        gl.glPushMatrix();
-
-        gl.glTranslated(0, 50, 0);
-        float scale = 0.4f;
-        gl.glScalef(scale, scale, 1.0f);
-
-        String gameOverText = "GAME OVER";
-        float textWidth = glut.glutStrokeLength(GLUT.STROKE_ROMAN, gameOverText);
-        gl.glTranslated(-textWidth / 2.0f, 0, 0);
-
-        for (char c : gameOverText.toCharArray())
-            glut.glutStrokeCharacter(GLUT.STROKE_ROMAN, c);
-
-        gl.glPopMatrix();
-
-        gl.glColor3f(1.0f, 1.0f, 1.0f);
-        String scoreText;
-        if (playerCount == 1) {
-            scoreText = "Final Score: " + fishes.get(0).score;
-        } else {
-            scoreText = "P1: " + fishes.get(0).score + " | P2: " +
+            scoreDetail = "P1: " + fishes.get(0).score + " | P2: " +
                     (fishes.size() > 1 ? fishes.get(1).score : 0);
         }
 
-        gl.glRasterPos2f(-60, -20);
-        for (char c : scoreText.toCharArray())
-            glut.glutBitmapCharacter(GLUT.BITMAP_TIMES_ROMAN_24, c);
+        if (endScreenDialog == null) {
+            endScreenDialog = new JDialog(gameFrame, "", true);
+            endScreenDialog.setUndecorated(true);
+            endScreenDialog.setSize(400, 350);
+            endScreenDialog.setLocationRelativeTo(gameFrame);
+            endScreenDialog.setLayout(new GridBagLayout());
+        }
 
-        gl.glColor3f(0.9f, 0.9f, 0.9f);
-        gl.glRasterPos2f(-90, -120);
-        String optionsText = "[R] Retry     [ESC] Exit";
-        for (char c : optionsText.toCharArray())
-            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
+        endScreenDialog.getContentPane().removeAll();
+        endScreenDialog.getContentPane().setBackground(bgColor);
 
-        gl.glDisable(GL.GL_BLEND);
-        gl.glEnable(GL.GL_TEXTURE_2D);
-        gl.glPopMatrix();
-        gl.glMatrixMode(GL.GL_PROJECTION);
-        gl.glPopMatrix();
-        gl.glMatrixMode(GL.GL_MODELVIEW);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.insets = new Insets(15, 10, 15, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel title = new JLabel(titleText, SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 40));
+        title.setForeground(titleColor);
+        endScreenDialog.add(title, gbc);
+
+        JLabel scoreLabel = new JLabel(scoreDetail, SwingConstants.CENTER);
+        scoreLabel.setFont(new Font("Arial", Font.PLAIN, 20));
+        scoreLabel.setForeground(Color.WHITE);
+        endScreenDialog.add(scoreLabel, gbc);
+
+        JButton retryBtn = createPauseMenuButton(actionText, actionColor);
+        retryBtn.addActionListener(e -> {
+            playButtonClickSound();
+            endScreenDialog.dispose();
+            restartGame();
+        });
+        endScreenDialog.add(retryBtn, gbc);
+
+        JButton homeBtn = createPauseMenuButton("HOME", new Color(0, 100, 150));
+        homeBtn.addActionListener(e -> {
+            playButtonClickSound();
+            endScreenDialog.dispose();
+            returnToMainMenu();
+        });
+        endScreenDialog.add(homeBtn, gbc);
+
+
+        JButton exitBtn = createPauseMenuButton("EXIT", new Color(50, 50, 50));
+        exitBtn.addActionListener(e -> {
+            playButtonClickSound();
+            System.exit(0);
+        });
+        endScreenDialog.add(exitBtn, gbc);
+
+        endScreenDialog.revalidate();
+        endScreenDialog.repaint();
+        endScreenDialog.setVisible(true);
     }
 
-    private void drawPauseText(GL gl) {
-        gl.glMatrixMode(GL.GL_PROJECTION);
-        gl.glPushMatrix();
-        gl.glLoadIdentity();
-        glu.gluOrtho2D(-maxWidth, maxWidth, -maxHeight, maxHeight);
-        gl.glMatrixMode(GL.GL_MODELVIEW);
-        gl.glPushMatrix();
-        gl.glLoadIdentity();
-
-        gl.glDisable(GL.GL_TEXTURE_2D);
-        gl.glEnable(GL.GL_BLEND);
-        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glColor4f(0, 0, 0, 0.6f);
-        gl.glBegin(GL.GL_QUADS);
-        gl.glVertex2f(-maxWidth, -maxHeight);
-        gl.glVertex2f(maxWidth, -maxHeight);
-        gl.glVertex2f(maxWidth, maxHeight);
-        gl.glVertex2f(-maxWidth, maxHeight);
-        gl.glEnd();
-
-        gl.glColor3f(1.0f, 1.0f, 1.0f);
-        gl.glRasterPos2f(-40, 0);
-        String pauseText = "PAUSED";
-        for (char c : pauseText.toCharArray())
-            glut.glutBitmapCharacter(GLUT.BITMAP_TIMES_ROMAN_24, c);
-
-        gl.glDisable(GL.GL_BLEND);
-        gl.glEnable(GL.GL_TEXTURE_2D);
-        gl.glPopMatrix();
-        gl.glMatrixMode(GL.GL_PROJECTION);
-        gl.glPopMatrix();
-        gl.glMatrixMode(GL.GL_MODELVIEW);
-    }
 
     public void setDifficulty(Difficulty difficulty) {
         this.currentDifficulty = difficulty;
@@ -620,42 +552,126 @@ public class FeedingFrenzy extends AnimListener {
 
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
-        if (showWinScreen) handleWinScreenInput(keyCode);
-        else if (showGameOverScreen) handleGameOverScreenInput(keyCode);
-        else if (gameOver) handleGameOverInput(keyCode);
-        else handleGameInput(keyCode);
+
+        if (!showWinScreen && !showGameOverScreen) {
+            handleGameInput(keyCode);
+        }
         keyBits.set(keyCode);
-    }
-
-    private void handleWinScreenInput(int keyCode) {
-        switch (keyCode) {
-            case KeyEvent.VK_R: restartGame(); break;
-            case KeyEvent.VK_ESCAPE: System.exit(0); break;
-        }
-    }
-
-    private void handleGameOverScreenInput(int keyCode) {
-        switch (keyCode) {
-            case KeyEvent.VK_R: restartGame(); break;
-            case KeyEvent.VK_ESCAPE: System.exit(0); break;
-        }
-    }
-
-    private void handleGameOverInput(int keyCode) {
-        switch (keyCode) {
-            case KeyEvent.VK_R: restartGame(); break;
-            case KeyEvent.VK_ESCAPE: System.exit(0); break;
-        }
     }
 
     private void handleGameInput(int keyCode) {
         switch (keyCode) {
-            case KeyEvent.VK_P: gamePaused = !gamePaused; break;
+            case KeyEvent.VK_P:
+                if (!menuOpen) {
+                    gamePaused = true;
+                    showPauseMenu();
+                }
+                break;
             case KeyEvent.VK_ESCAPE: System.exit(0); break;
         }
     }
 
+    private void showPauseMenu() {
+        if (pauseDialog == null) {
+            pauseDialog = new JDialog(gameFrame, "Game Paused", true);
+            pauseDialog.setUndecorated(true);
+            pauseDialog.setLayout(new GridBagLayout());
+            pauseDialog.setSize(300, 300);
+            pauseDialog.setLocationRelativeTo(gameFrame);
+            pauseDialog.getContentPane().setBackground(new Color(0, 50, 100, 230));
+
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridwidth = GridBagConstraints.REMAINDER;
+            gbc.insets = new Insets(15, 10, 15, 10);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            JLabel title = new JLabel("PAUSED", SwingConstants.CENTER);
+            title.setFont(new Font("Arial", Font.BOLD, 30));
+            title.setForeground(Color.YELLOW);
+            pauseDialog.add(title, gbc);
+
+            JButton resumeBtn = createPauseMenuButton("RESUME", new Color(0, 150, 0));
+            resumeBtn.addActionListener(e -> {
+                playButtonClickSound();
+                resumeGame();
+            });
+            pauseDialog.add(resumeBtn, gbc);
+
+            JButton homeBtn = createPauseMenuButton("HOME", new Color(0, 100, 150));
+            homeBtn.addActionListener(e -> {
+                playButtonClickSound();
+                returnToMainMenu();
+            });
+            pauseDialog.add(homeBtn, gbc);
+
+            JButton exitBtn = createPauseMenuButton("EXIT", new Color(150, 0, 0));
+            exitBtn.addActionListener(e -> {
+                playButtonClickSound();
+                System.exit(0);
+            });
+            pauseDialog.add(exitBtn, gbc);
+        }
+
+        menuOpen = true;
+        if (animator.isAnimating()) animator.stop(); // 🛑 إيقاف الرسوم
+        pauseDialog.setVisible(true);
+    }
+
+    // دالة مساعدة لإنشاء أزرار القائمة
+    private JButton createPauseMenuButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 18));
+        button.setForeground(Color.WHITE);
+        button.setBackground(bgColor);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 50, 10, 50));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.setOpaque(true);
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) { button.setBackground(bgColor.brighter()); }
+            @Override
+            public void mouseExited(MouseEvent e) { button.setBackground(bgColor); }
+        });
+        return button;
+    }
+
+    private void resumeGame() {
+        if (pauseDialog != null) pauseDialog.dispose();
+        gamePaused = false;
+        menuOpen = false;
+
+        // 1. إعادة تشغيل Animator
+        if (!animator.isAnimating()) {
+            animator.start();
+        }
+
+        // 2. 🚨 إعادة التركيز على GLCanvas لضمان ظهور اللعبة والتحكم 🚨
+        SwingUtilities.invokeLater(() -> {
+            if (gameFrame != null) {
+                Component[] components = gameFrame.getContentPane().getComponents();
+                for (Component comp : components) {
+                    if (comp instanceof GLCanvas) {
+                        comp.requestFocusInWindow();
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    private void returnToMainMenu() {
+        if (pauseDialog != null) pauseDialog.dispose();
+        if (endScreenDialog != null) endScreenDialog.dispose();
+        if (animator.isAnimating()) animator.stop();
+        audioManager.stopBackgroundMusic();
+
+        FeedingFrenzyMenu.relaunchMenu(gameFrame);
+    }
+
     private void restartGame() {
+        if (endScreenDialog != null) endScreenDialog.dispose();
+
         gameOver = false;
         gamePaused = false;
         showWinScreen = false;
@@ -669,6 +685,7 @@ public class FeedingFrenzy extends AnimListener {
             f.scale = 0.45;
         }
         spawnCounter = spawnDelay;
+        if (!animator.isAnimating()) animator.start();
         audioManager.stopBackgroundMusic();
         audioManager.playBackgroundMusic("background");
     }
@@ -692,10 +709,10 @@ public class FeedingFrenzy extends AnimListener {
 
     private String player1Name = "Player1";
     private String player2Name = "Player2";
+    private String assetsFolderName = "Assets";
 
     public void setPlayerNames(String p1, String p2) {
         this.player1Name = p1;
         this.player2Name = p2;
     }
-
 }

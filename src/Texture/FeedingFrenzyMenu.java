@@ -10,7 +10,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 import com.sun.opengl.util.FPSAnimator;
-
 import javax.media.opengl.GLCanvas;
 
 public class FeedingFrenzyMenu extends JFrame {
@@ -42,6 +41,8 @@ public class FeedingFrenzyMenu extends JFrame {
     private AudioManager audioManager;
     private static final String SOUNDS_PATH = System.getProperty("user.dir") + "\\Assets\\sounds\\";
 
+    private static FeedingFrenzyMenu instance;
+
     public FeedingFrenzyMenu() {
         setTitle("Feeding Frenzy");
         setSize(800, 800);
@@ -66,6 +67,19 @@ public class FeedingFrenzyMenu extends JFrame {
         cardLayout.show(mainPanel, "MAIN_MENU");
 
         setVisible(true);
+        instance = this;
+    }
+
+    public static void relaunchMenu(JFrame previousFrame) {
+        if (instance != null) {
+            if (previousFrame != null) previousFrame.dispose();
+            instance.setVisible(true);
+            instance.audioManager.playMenuBackgroundMusic();
+            instance.handleMainMenu("MAIN_MENU");
+        } else {
+            if (previousFrame != null) previousFrame.dispose();
+            SwingUtilities.invokeLater(FeedingFrenzyMenu::new);
+        }
     }
 
     private void initializeAudio() {
@@ -124,7 +138,6 @@ public class FeedingFrenzyMenu extends JFrame {
                 exitHover = resizeImageIcon(new ImageIcon("src/InterFace/Exit 2.png"), 150, 150);
             } catch (Exception e) {
                 createDefaultImages();
-                return;
             }
 
             try {
@@ -139,17 +152,21 @@ public class FeedingFrenzyMenu extends JFrame {
                 player2Hover = createTextIcon("2 PLAYERS", ACCENT_YELLOW, 150, 150);
             }
 
-            menuIcon = resizeImageIcon(new ImageIcon("src/InterFace/icon.png"), 400, 400);
+            try {
+                menuIcon = resizeImageIcon(new ImageIcon("src/InterFace/icon.png"), 400, 400);
 
-            easyBefore2 = resizeImageIcon(new ImageIcon("src/InterFace/before 2.png"), 120, 50);
-            easyAfter1 = resizeImageIcon(new ImageIcon("src/InterFace/after 1.png"), 120, 50);
-            easyAfter2 = resizeImageIcon(new ImageIcon("src/InterFace/after 2.png"), 120, 50);
-            mediumBefore2 = resizeImageIcon(new ImageIcon("src/InterFace/before 2.png"), 120, 50);
-            mediumAfter1 = resizeImageIcon(new ImageIcon("src/InterFace/after 1.png"), 120, 50);
-            mediumAfter2 = resizeImageIcon(new ImageIcon("src/InterFace/after 2.png"), 120, 50);
-            hardBefore2 = resizeImageIcon(new ImageIcon("src/InterFace/before 2.png"), 120, 50);
-            hardAfter1 = resizeImageIcon(new ImageIcon("src/InterFace/after 1.png"), 120, 50);
-            hardAfter2 = resizeImageIcon(new ImageIcon("src/InterFace/after 2.png"), 120, 50);
+                easyBefore2 = resizeImageIcon(new ImageIcon("src/InterFace/before 2.png"), 120, 50);
+                easyAfter1 = resizeImageIcon(new ImageIcon("src/InterFace/after 1.png"), 120, 50);
+                easyAfter2 = resizeImageIcon(new ImageIcon("src/InterFace/after 2.png"), 120, 50);
+                mediumBefore2 = resizeImageIcon(new ImageIcon("src/InterFace/before 2.png"), 120, 50);
+                mediumAfter1 = resizeImageIcon(new ImageIcon("src/InterFace/after 1.png"), 120, 50);
+                mediumAfter2 = resizeImageIcon(new ImageIcon("src/InterFace/after 2.png"), 120, 50);
+                hardBefore2 = resizeImageIcon(new ImageIcon("src/InterFace/before 2.png"), 120, 50);
+                hardAfter1 = resizeImageIcon(new ImageIcon("src/InterFace/after 1.png"), 120, 50);
+                hardAfter2 = resizeImageIcon(new ImageIcon("src/InterFace/after 2.png"), 120, 50);
+            } catch (Exception e) {
+                createDefaultImages();
+            }
 
         } catch (Exception e) {
             menuBackground = null;
@@ -165,33 +182,34 @@ public class FeedingFrenzyMenu extends JFrame {
         return new ImageIcon(resizedImg);
     }
 
+    // 🌟🌟 الإضافة لحل مشكلة الـ Error 🌟🌟
     private void createDefaultImages() {
-        newGameNormal = createTextIcon("NEW GAME", Color.WHITE, 150, 50);
-        newGameHover = createTextIcon("NEW GAME", ACCENT_YELLOW, 150, 50);
-        gameOptionsNormal = createTextIcon("OPTIONS", Color.WHITE, 150, 50);
-        gameOptionsHover = createTextIcon("OPTIONS", ACCENT_YELLOW, 150, 50);
-        exitNormal = createTextIcon("EXIT", Color.WHITE, 150, 50);
-        exitHover = createTextIcon("EXIT", ACCENT_YELLOW, 150, 50);
+        int size = 150;
 
-        player1Normal = createTextIcon("1 PLAYER", Color.CYAN, 120, 120);
-        player1Hover = createTextIcon("1 PLAYER", ACCENT_YELLOW, 120, 120);
-        player2Normal = createTextIcon("2 PLAYERS", Color.ORANGE, 120, 120);
-        player2Hover = createTextIcon("2 PLAYERS", ACCENT_YELLOW, 120, 120);
+        newGameNormal = createTextIcon("NEW GAME", PRIMARY_BLUE, size, size);
+        newGameHover = createTextIcon("NEW GAME", ACCENT_YELLOW, size, size);
 
+        gameOptionsNormal = createTextIcon("OPTIONS", PRIMARY_BLUE, size, size);
+        gameOptionsHover = createTextIcon("OPTIONS", ACCENT_YELLOW, size, size);
+
+        exitNormal = createTextIcon("EXIT", Color.RED, size, size);
+        exitHover = createTextIcon("EXIT", ACCENT_YELLOW, size, size);
+
+        player1Normal = createTextIcon("1 PLAYER", Color.CYAN, size, size);
+        player1Hover = createTextIcon("1 PLAYER", ACCENT_YELLOW, size, size);
+        player2Normal = createTextIcon("2 PLAYERS", Color.ORANGE, size, size);
+        player2Hover = createTextIcon("2 PLAYERS", ACCENT_YELLOW, size, size);
+
+        // أيقونة افتراضية للقائمة (سمكة)
         menuIcon = createFishIcon(400, 400);
 
-        easyBefore2 = createTextIcon("EASY", Color.GREEN, 120, 50);
-        easyAfter1 = createTextIcon("✓ EASY", Color.GREEN.brighter(), 120, 50);
-        easyAfter2 = createTextIcon("✓ EASY", Color.YELLOW, 120, 50);
-
-        mediumBefore2 = createTextIcon("MEDIUM", Color.ORANGE, 120, 50);
-        mediumAfter1 = createTextIcon("✓ MEDIUM", Color.ORANGE.brighter(), 120, 50);
-        mediumAfter2 = createTextIcon("✓ MEDIUM", Color.YELLOW, 120, 50);
-
-        hardBefore2 = createTextIcon("HARD", Color.RED, 120, 50);
-        hardAfter1 = createTextIcon("✓ HARD", Color.RED.brighter(), 120, 50);
-        hardAfter2 = createTextIcon("✓ HARD", Color.YELLOW, 120, 50);
+        // أيقونات افتراضية لدرجات الصعوبة
+        ImageIcon defaultDiffIcon = createTextIcon("LEVEL", Color.WHITE, 120, 50);
+        easyBefore2 = easyAfter1 = easyAfter2 = defaultDiffIcon;
+        mediumBefore2 = mediumAfter1 = mediumAfter2 = defaultDiffIcon;
+        hardBefore2 = hardAfter1 = hardAfter2 = defaultDiffIcon;
     }
+    // 🌟🌟 نهاية الإضافة 🌟🌟
 
     private ImageIcon createTextIcon(String text, Color color, int width, int height) {
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -381,7 +399,6 @@ public class FeedingFrenzyMenu extends JFrame {
         JPanel textPanel = new JPanel(new BorderLayout());
         textPanel.setOpaque(false);
         textPanel.add(titleLabel, BorderLayout.CENTER);
-        // textPanel.add(descLabel, BorderLayout.SOUTH);
 
         buttonPanel.add(iconLabel, BorderLayout.WEST);
         buttonPanel.add(textPanel, BorderLayout.CENTER);
@@ -444,7 +461,10 @@ public class FeedingFrenzyMenu extends JFrame {
                 @Override
                 public void mouseExited(MouseEvent e) { setIcon(selected ? after1 : before2); }
                 @Override
-                public void mouseClicked(MouseEvent e) { selectButton(); }
+                public void mouseClicked(MouseEvent e) {
+                    playButtonClickSound();
+                    selectButton();
+                }
             });
         }
 
@@ -537,11 +557,10 @@ public class FeedingFrenzyMenu extends JFrame {
     }
 
     private void startGameWithLevelAndDifficulty(int level, FeedingFrenzy.Difficulty difficulty) {
-        playButtonClickSound();
         stopMenuMusic();
         dispose();
 
-        FeedingFrenzy listener = new FeedingFrenzy(difficulty);
+        FeedingFrenzy listener = new FeedingFrenzy(difficulty, this);
         listener.setPlayerCount(playerCount);
         listener.setLevel(level);
         listener.setDifficulty(difficulty);
@@ -560,6 +579,8 @@ public class FeedingFrenzyMenu extends JFrame {
         gameFrame.getContentPane().add(canvas, BorderLayout.CENTER);
 
         FPSAnimator animator = new FPSAnimator(canvas, 15, true);
+        listener.setAnimator(animator);
+        listener.setGameFrame(gameFrame);
         animator.start();
         gameFrame.setSize(1000, 1000);
         gameFrame.setLocationRelativeTo(null);
@@ -576,7 +597,12 @@ public class FeedingFrenzyMenu extends JFrame {
         button.setBorder(BorderFactory.createEmptyBorder(12, 40, 12, 40));
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        button.addActionListener(listener);
+
+        button.addActionListener(e -> {
+            playButtonClickSound();
+            listener.actionPerformed(e);
+        });
+
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) { if (button.isEnabled()) button.setBackground(bgColor.brighter()); }
@@ -585,13 +611,13 @@ public class FeedingFrenzyMenu extends JFrame {
         });
         return button;
     }
+
     private JPanel createOptionsScreen() {
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(80, 50, 50, 50));
 
-        // عنوان الصفحة
         JLabel titleLabel = new JLabel("GAME OPTIONS", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
         titleLabel.setForeground(ACCENT_YELLOW);
@@ -599,7 +625,6 @@ public class FeedingFrenzyMenu extends JFrame {
         contentPanel.add(titleLabel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 50)));
 
-        // صوت
         JPanel soundControlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         soundControlPanel.setOpaque(false);
         JLabel soundLabel = new JLabel("🔊 Sound: ");
@@ -612,9 +637,9 @@ public class FeedingFrenzyMenu extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 if (isSelected()) {
-                    g2d.setColor(new Color(0, 200, 0)); // أخضر ON
+                    g2d.setColor(new Color(0, 200, 0));
                 } else {
-                    g2d.setColor(Color.RED); // OFF
+                    g2d.setColor(Color.RED);
                 }
                 g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
                 g2d.setColor(Color.WHITE);
@@ -640,9 +665,8 @@ public class FeedingFrenzyMenu extends JFrame {
         contentPanel.add(soundControlPanel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        // مستوى الصوت
         JPanel volumePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        volumePanel.setOpaque(false); // شيل الخلفية البيضاء
+        volumePanel.setOpaque(false);
         JLabel volumeLabel = new JLabel("📢 Volume: ");
         volumeLabel.setForeground(Color.WHITE);
         volumeLabel.setFont(new Font("Arial", Font.BOLD, 20));
@@ -653,7 +677,6 @@ public class FeedingFrenzyMenu extends JFrame {
         volumeSlider.setPaintTicks(false);
         volumeSlider.setPaintLabels(false);
 
-        // تعديل شكل شريط الصوت
         volumeSlider.setUI(new javax.swing.plaf.basic.BasicSliderUI(volumeSlider) {
             @Override
             public void paintTrack(Graphics g) {
@@ -682,22 +705,18 @@ public class FeedingFrenzyMenu extends JFrame {
         contentPanel.add(volumePanel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        // زرار HOW TO PLAY بلون خلفية مختلف
         JButton howToPlayBtn = createStyledNavButton("HOW TO PLAY", new Color(255, 140, 0), e -> {
-            playButtonClickSound();
             showHowToPlay();
         });
         howToPlayBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(howToPlayBtn);
-        contentPanel.add(Box.createRigidArea(new Dimension(0, 50))); // زيادة المسافة
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 50)));
 
-        // زرار BACK TO MAIN MENU تحت شويه
         JButton backBtn = createStyledNavButton("← BACK TO MAIN MENU", PRIMARY_BLUE.darker(),
                 e -> handleMainMenu("MAIN_MENU"));
         backBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(backBtn);
 
-        // الخلفية
         JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
         panel.add(contentPanel);
         return panel;
@@ -720,7 +739,6 @@ public class FeedingFrenzyMenu extends JFrame {
         };
         howToPlayPanel.setOpaque(true);
 
-        // زرار BACK في الأسفل
         JButton backBtn = createStyledNavButton("← BACK", PRIMARY_BLUE.darker(),
                 e -> cardLayout.show(mainPanel, "OPTIONS_SCREEN"));
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
