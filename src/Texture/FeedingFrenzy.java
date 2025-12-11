@@ -359,7 +359,7 @@ public class FeedingFrenzy extends AnimListener {
         if (fishes.size() > 0) {
             Fish fish1 = fishes.get(0);
             gl.glColor3f(0.0f, 1.0f, 0.0f);
-            gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
+            gl.glRasterPos2f(maxWidth - 75, maxHeight - 20);
             String p1Text = "P1: " + fish1.score + " / " + scoreToWin;
             for (char c : p1Text.toCharArray())
                 glut.glutBitmapCharacter(GLUT.BITMAP_TIMES_ROMAN_24, c);
@@ -377,7 +377,7 @@ public class FeedingFrenzy extends AnimListener {
         if (playerCount == 2 && fishes.size() > 1) {
             Fish fish2 = fishes.get(1);
             gl.glColor3f(0.0f, 1.0f, 1.0f);
-            gl.glRasterPos2f(maxWidth - 75, maxHeight - 20);
+            gl.glRasterPos2f(-maxWidth + 20, maxHeight - 20);
             String p2Text = "P2: " + fish2.score + " / " + scoreToWin;
             for (char c : p2Text.toCharArray())
                 glut.glutBitmapCharacter(GLUT.BITMAP_TIMES_ROMAN_24, c);
