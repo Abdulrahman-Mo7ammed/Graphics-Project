@@ -147,7 +147,6 @@ public class FeedingFrenzy extends AnimListener {
         }
         @Override
         public void playWinSound() {
-            audioManager.playSound("eat");
             audioManager.playSound("growth");
         }
     };
@@ -165,19 +164,64 @@ public class FeedingFrenzy extends AnimListener {
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
         gl.glGenTextures(textureNames.length, textures, 0);
+        // تحميل الأصوات
+        File soundsFolder = new File(SOUNDS_PATH);
+        if (!soundsFolder.exists()) {
+            System.err.println("ERROR: Sounds folder not found!");
+            System.err.println("Path: " + SOUNDS_PATH);
+        } else {
+            System.out.println("Sounds folder found!");
+        }
+        audioManager = new AudioManager();
+
+        String[] sounds = {
+                "background .wav",
+                "Bubbles.wav",
+                "collision.wav",
+                "fish eats.wav",
+                "fish growth.wav",
+                "game-over.wav",
+                "zapsplat_cartoon.wav"
+        };
+
+        String[] soundNames = {
+                "background", "bubble", "collision",
+                "eat", "growth", "gameover", "zap"
+        };
+
+        for (int i = 0; i < sounds.length; i++) {
+            String fullPath = SOUNDS_PATH + sounds[i];
+            System.out.print("Loading " + soundNames[i] + "... ");
+            if (new File(fullPath).exists()) {
+                boolean loaded = audioManager.loadSound(soundNames[i], fullPath);
+                System.out.println(loaded ? "✓" : "✗");
+            } else {
+                System.out.println("✗ (File not found)");
+            }
+        }
 
         try {
             audioManager.playBackgroundMusic("background");
+            System.out.println("Background music started ✓");
         } catch (Exception e) {
             System.out.println("Could not play background music: " + e.getMessage());
         }
 
+// تحميل القوام
         for (int i = 0; i < textureNames.length; i++) {
             try {
-                texture[i] = TextureReader.readTexture(assetsFolderName + File.separator + "Fish_game" + File.separator + textureNames[i], true);
+                texture[i] = TextureReader.readTexture(
+                        assetsFolderName + File.separator +
+                                "Fish_game" + File.separator +
+                                textureNames[i], true);
+
                 gl.glBindTexture(GL.GL_TEXTURE_2D, textures[i]);
                 GLU glu = new GLU();
-                glu.gluBuild2DMipmaps(GL.GL_TEXTURE_2D, GL.GL_RGBA, texture[i].getWidth(), texture[i].getHeight(), GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, texture[i].getPixels());
+                glu.gluBuild2DMipmaps(
+                        GL.GL_TEXTURE_2D, GL.GL_RGBA,
+                        texture[i].getWidth(), texture[i].getHeight(),
+                        GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, texture[i].getPixels()
+                );
             } catch (IOException e) {
                 System.out.println("Error loading texture " + textureNames[i]);
             }

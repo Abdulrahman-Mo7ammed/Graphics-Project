@@ -161,6 +161,7 @@ public class Fish {
                     enemies.remove(i);
                     i--;
 
+
                     this.startEating();
 
                     // زيادة الحجم حسب نوع السمكة المأكولة
