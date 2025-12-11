@@ -303,9 +303,11 @@ public class QuizGLEventListener extends AnimListener {
         }
 
         for (Fish f : fishes) {
-            f.updateMovement(keyBits, maxWidth, maxHeight);
-            f.updateInvincible();
-            f.checkCollision(monsters);
+            if (f.Heart > 0) {
+                f.updateMovement(keyBits, maxWidth, maxHeight);
+                f.updateInvincible();
+                f.checkCollision(monsters);
+            }
             f.draw(gl, textures);
         }
 
@@ -315,13 +317,41 @@ public class QuizGLEventListener extends AnimListener {
                 saveHighScore();
             }
         }
+
+        checkWinCondition();
     }
 
     private void checkWinCondition() {
         if (!gameOver && !showWinScreen) {
+
+            if (playerCount == 2) {
+                int deadCount = 0;
+                Fish winningFish = null;
+                int winnerIndex = -1;
+
+                for (int i = 0; i < fishes.size(); i++) {
+                    Fish f = fishes.get(i);
+                    if (f.Heart > 0) {
+                        winningFish = f;
+                        winnerIndex = i + 1;
+                    } else {
+                        deadCount++;
+                    }
+                }
+
+                if (deadCount == 1 && fishes.size() == 2) {
+                    gameOver = true;
+                    showWinScreen = true;
+                    winner = winnerIndex;
+                    fishSoundCallback.playWinSound();
+                    audioManager.stopBackgroundMusic();
+                    return;
+                }
+            }
+
             for (int i = 0; i < fishes.size(); i++) {
                 Fish f = fishes.get(i);
-                if (f.score >= 250) {
+                if (f.score >= scoreToWin) {
                     gameOver = true;
                     showWinScreen = true;
                     winner = i + 1;
@@ -331,7 +361,6 @@ public class QuizGLEventListener extends AnimListener {
                 }
             }
 
-            // تحقق إذا ماتت كل الأسماك
             boolean allDead = true;
             for (Fish f : fishes) {
                 if (f.Heart > 0) {
