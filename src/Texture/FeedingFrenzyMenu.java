@@ -296,13 +296,17 @@ public class FeedingFrenzyMenu extends JFrame {
             });
         }
     }
+
     private void handleMainMenu(String command) {
         switch (command) {
             case "NEW_GAME":
-                playButtonClickSound();
-                playerCount = 1; // افتراض 1 player مباشر
-                difficulty = FeedingFrenzy.Difficulty.EASY; // افتراض مستوى سهل
-                startGameWithLevelAndDifficulty(1, difficulty); // يبدأ اللعبة مباشرة
+                difficulty = null;
+                playerCount = 1;
+                selectedDifficultyButton = null;
+                mainPanel.remove(playerSelectionPanel);
+                playerSelectionPanel = createPlayerSelection();
+                mainPanel.add(playerSelectionPanel, "PLAYER_SELECT");
+                cardLayout.show(mainPanel, "PLAYER_SELECT");
                 break;
             case "OPTIONS":
                 cardLayout.show(mainPanel, "OPTIONS_SCREEN");
@@ -316,7 +320,6 @@ public class FeedingFrenzyMenu extends JFrame {
                 break;
         }
     }
-
 
     private JPanel createPlayerSelection() {
         JPanel panel = createBackgroundPanel(sharedBackground, new Color(0, 50, 100));
@@ -735,7 +738,6 @@ public class FeedingFrenzyMenu extends JFrame {
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to exit?", "Exit Game", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (confirm == JOptionPane.YES_OPTION) System.exit(0);
     }
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(FeedingFrenzyMenu::new);
