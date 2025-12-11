@@ -199,7 +199,6 @@ public class Fish {
                      //   soundCallback.playGrowthSound();
                     }
                 } else {
-                    // العدو يأكل السمكة
                     if (!invincible) {
                         enemy.eat();
                         Heart--;
@@ -207,18 +206,16 @@ public class Fish {
                         if (Heart <= 0) {
                             isAlive = false;
 
-                            // صوت نهاية اللعبة
                             if (soundCallback != null) {
                                 soundCallback.playGameOverSound();
                             }
                         } else {
-                            // جعل السمكة غير قابلة للإصابة مؤقتاً
+                            score = 0;
+
                             invincible = true;
                             invincibleTimer = 50;
-                            // إعادة السمكة للمركز
                             x = 0;
                             y = 0;
-                            // تصغير الحجم
                             scale = 0.45;
                         }
                     }

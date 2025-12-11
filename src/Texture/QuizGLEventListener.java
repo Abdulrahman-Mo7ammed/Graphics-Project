@@ -110,7 +110,7 @@ public class QuizGLEventListener extends AnimListener {
     int spawnDelay = 10;
     int spawnCounter = 10;
 
-    int scoreToWin = 1000;
+    int scoreToWin = 250;
     boolean gameOver = false;
     boolean gamePaused = false;
     boolean showMenu = false;
