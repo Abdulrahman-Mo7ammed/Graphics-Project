@@ -16,7 +16,6 @@
 
     public class FeedingFrenzyMenu extends JFrame {
 
-        // المتغيرات الخاصة بالصور واللوحات
         private ImageIcon newGameNormal, newGameHover;
         private ImageIcon gameOptionsNormal, gameOptionsHover;
         private ImageIcon exitNormal, exitHover;
