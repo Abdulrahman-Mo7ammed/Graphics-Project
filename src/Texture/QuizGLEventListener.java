@@ -279,6 +279,7 @@ public class QuizGLEventListener extends AnimListener {
     }
 
     private void updateGame(GL gl) {
+
         if (spawnCounter == spawnDelay) {
             boolean startFromRight = Math.random() > 0.5;
             double startX = startFromRight ? maxWidth : -maxWidth;
@@ -317,7 +318,8 @@ public class QuizGLEventListener extends AnimListener {
                 saveHighScore();
             }
         }
-
+        // في دالة updateGame، في نهاية الدالة
+        System.out.println("Monsters Count: " + monsters.size());
         checkWinCondition();
     }
 
@@ -1093,9 +1095,6 @@ public class QuizGLEventListener extends AnimListener {
                 break;
             case KeyEvent.VK_L:
                 changeLevel();
-                break;
-            case KeyEvent.VK_D:
-                changeDifficulty();
                 break;
             case KeyEvent.VK_R:
                 restartGame();
